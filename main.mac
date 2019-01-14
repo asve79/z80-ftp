@@ -45,7 +45,7 @@ oc5	LD	A,(HL)	;//find port number or rezo
 	JR	oc8
 oc6	INC	HL
 	JP	oc5
-oc7	LD	DE,23
+oc7	LD	DE,21	;//default port number
 	LD	(server_port),DE
 	JR	oc9
 oc8	CALL	strings.texttonum
@@ -53,21 +53,26 @@ oc8	CALL	strings.texttonum
 oc9	POP	HL
 	ld 	HL, cmd_bufer+5
 oc1	CALL 	sockets.gethostbyname	;//get ip address
-	or a:jp nz,get_err
-	ld (server_addr),hl,(server_addr+2),bc
+	or	a
+	JP	nz,get_err
+	LD 	(server_addr),hl;
+	LD	(server_addr+2),bc
 
 	;create socket			;//create socket
 	socket 	AF_INET,SOCK_STREAM,0
-	cp #FF:jp z,get_err
-	ld 	(conn_descr),a
+	cp 	#FF
+	jp 	z,get_err
+	LD 	(conn_descr),a
 
 	;bind my socket
 	bind conn_descr,my_addr		;//bind to address ????
-	or a:jp nz,get_err
+	or 	a
+	jp 	nz,get_err
 
         ;connect to host
 	connect conn_descr,server_addr	;//create connection
-	or a:jr nz,get_err
+	or 	a
+	jr	nz,get_err
 	_closew
 	_prints msg_openok
 	LD	A,1
@@ -111,6 +116,17 @@ lex
 	LD	(conn_descr),A
 	XOR	A
 	LD	(connected),A
+
+	LD	A,(data_descr)		;//close data connection if it exists
+	CP	0FFh
+	JZ	l2			;if descriptor is bad => no connected
+	CALL 	sockets.close
+	OR	A
+	JNZ	l21
+	_prints msg_connectclosed
+	LD	A,#FF
+	LD	(data_descr),A
+
 	JR	l2
 l21	_prints msg_closeerr
 l2	CALL	showstatus
@@ -172,4 +188,130 @@ l5
 	MACRO	_iscmdmode
 	LD	A,(termcmd)
 	CP	1
+	ENDM
+;-----------------------------
+; service ready for user
+	MACRO	_isstatus230
+	LD	A,(ftp_cmd_result_code)
+	CP	230
+	JNZ	exit230
+	LD	HL,inp_bufer
+	LD	DE,ftp_cmd_pasv
+	LD	B,7
+s230l	LD	A,(DE)
+	LD	(HL),A
+	INC	DE
+	INC	HL
+	DJNZ	s230l
+	_prints	inp_bufer
+	LD	BC,7
+	JP	ekcm_snd
+exit230
+	ENDM
+;-----------------------------
+;Enter to passive mode
+	MACRO	_isstatus227
+	LD	A,(ftp_cmd_result_code)
+	CP	227
+	JNZ	exit227
+	LD	HL,rcv_bufer
+is227l1 LD	A,(HL)
+	OR	A
+	JZ	exit227
+	CP	13
+	JZ	exit227
+	INC	HL
+	CP	'('
+	JNZ	is227l1
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_addr),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	POP	HL
+	LD	A,E
+	LD	(passive_addr+1),A
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_addr+2),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_addr+3),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_port+1),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_port),A
+
+;	_printw wnd_status
+	LD	A,13
+	_printc
+	LD	A,(passive_addr)
+	CALL	wind.A_HEX
+	LD	A,','
+	_printc
+	LD	A,(passive_addr+1)
+	CALL	wind.A_HEX
+	LD	A,','
+	_printc
+	LD	A,(passive_addr+2)
+	CALL	wind.A_HEX
+	LD	A,','
+	_printc
+	LD	A,(passive_addr+3)
+	CALL	wind.A_HEX
+	LD	A,':'
+	_printc
+	LD	HL,(passive_port)
+	CALL	wind.HL_HEX
+
+	;create socket			;//create socket
+	socket 	AF_INET,SOCK_STREAM,0
+	cp 	#FF
+	jp 	z,is227err
+	LD 	(data_descr),a
+
+	LD	a,13	;//debuf
+	_printc
+	LD	a,'*'
+	_printc
+	LD	A,(data_descr)
+	call	wind.A_HEX
+
+	;bind my socket
+	bind 	data_descr,my_addr		;//bind to address ????
+	or 	a
+	jp 	nz,is227err
+
+        ;connect to host
+	connect data_descr,passive_addr	;//create connection
+	or 	a
+	jr	nz,is227err
+;	_closew
+	LD	A,13
+	_printc
+	_prints msg_datastream
+	LD	A,13
+	_printc
+	JR	exit227
+is227err
+;	_closew
+	LD	a,13
+	_printc
+	_prints msg_dataerr
+exit227
 	ENDM

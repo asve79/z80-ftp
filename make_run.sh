@@ -1,6 +1,6 @@
 #!/bin/sh
 
-prog=telnet.sna
+prog=ftp.sna
 
 ./_make.sh
 if [ $? -eq 0 ];then

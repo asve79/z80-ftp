@@ -13,8 +13,12 @@ PROG
 	CALL	showstatus
 	_cur_on
 
-mloop   CALL	check_rcv
-	CALL    spkeyb.CONINW	;main loop entry
+mloop   CALL	cangetdata
+	JR	NZ,mloop_s
+	CALL	check_rcv
+	CALL	proc_status
+	CALL	check_data
+mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop		;wait a press key
 	PUSH 	AF
 	_iscmdmode		;if comman mode on go to cmdmodeproc
@@ -39,7 +43,7 @@ mloop   CALL	check_rcv
 	JZ	enterkeytermmode
 	CALL	puttotermbufer	;//put char to command bufer and print
 	JP	mloop
-cmdmodeproc ;process comman mode
+cmdmodeproc ;process command mode
 	POP	AF
 	CP	#08		;left cursor key pressed
 	JZ	mloop
@@ -102,8 +106,6 @@ enterkeycmdmode	;enter key pressed in command window. execute command if it exis
 	_ishelpcommand  cmd_bufer,eccm1	;//'help' command
 	_isaboutcommand cmd_bufer,eccm1	;//'about' command
 	_isexitcommand cmd_bufer,eccm1	;//'about' command
-	_istelnetcommand cmd_bufer,eccm1 ;//'telnet' command. alias for open command
-	_isftpcommand cmd_bufer,eccm1	;//'ftp' command
 	_clearwindow			;// wrong command:  clear window
 eccm1	_fillzero cmd_bufer, 100	;clear command buffer
 	JP 	mloop
@@ -121,6 +123,9 @@ enterkeytermmode	;enter key pressed in terminal window
 	INC	C
 	LD	B,0
 	INC	BC
+ekcm_snd
+	XOR	A		;//reset last status code for we can undestand what new commend arrived
+	LD	(ftp_cmd_result_code),A
 	LD	A,(conn_descr)
 	LD	HL,inp_bufer
 	CALL	sockets.send	;//send buffer content
@@ -202,7 +207,43 @@ INCCNTR LD	A,(im_cntr)
 	LD	(im_cntr),A
 	RET
 
-check_rcv	;//check receve info from connection
+check_data
+;	LD	A,'$'	;//for debugging
+;	_printc
+	LD	A,(connected)
+	OR	A
+	RET	Z		;//if not connected
+	LD	A,(data_descr)
+	CP	#FF		;//check descriptor. FF - bad
+	RET	Z
+chd1	recv	data_descr,data_bufer,255
+	LD	HL,data_bufer
+	OR	A
+	JZ	chd5
+	_printw wnd_status	;//if error, close connection
+	LD	A,'!'
+	_printc
+	_closew
+	CALL	close_connection
+	JR	chd4
+chd5	_cur_off
+chd2	LD	A,B	;//----------- get info from bufer ------------
+	OR	A
+	JNZ	chd3
+	LD	A,C
+	OR	A
+	JR	Z,chd4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
+chd3	LD	A,(HL)
+	_printc		;//print char
+	INC	HL
+	DEC	BC
+	JP	chd2
+chd4	_cur_on
+	RET
+
+	RET
+
+cangetdata
 	LD	A,(im_cntr)
 	AND	#F0
 	RET	Z		;skip N tick's
@@ -210,7 +251,10 @@ check_rcv	;//check receve info from connection
 	LD	(im_cntr),A
 	LD	A,(termcmd)
 	OR	A
-	RET	NZ		;//if terminal mode, then no print error status
+	RET
+
+;- RECEVE MAIN -----------------------------------------------------------------------------
+check_rcv	;//check receve info from main connection
 ;	LD	A,'$'	;//for debugging
 ;	_printc
 	LD	A,(connected)
@@ -230,7 +274,7 @@ rcv1	recv	conn_descr,rcv_bufer,255
 	CALL	close_connection
 	JR	rcv4
 rcv5	_cur_off
-rcv2	LD	A,B
+rcv2	LD	A,B	;//----------- get info from bufer ------------
 	OR	A
 	JNZ	rcv3
 	LD	A,C
@@ -240,7 +284,21 @@ rcv3	LD	A,(HL)
 	_printc		;//print char
 	INC	HL
 	DEC	BC
-	JR	rcv2
+	CP	13	;//check for CR
+	JNZ	rcv2
+	PUSH	HL
+;	LD	A,"-"	;// debug
+;	_printc
+	LD	HL, rcv_bufer
+	LD	A,3
+	CALL	strings.texttonum_c
+	LD	A,E
+	LD	(ftp_cmd_result_code),A
+	CALL	wind.A_HEX
+	LD	A,13
+	_printc
+	POP	HL	
+;	JR	rcv2	;//!!!!!!!!!!!!!!!!!!!!!!!!NOW WE CHECK ONLY FIRST STATUS
 rcv4	_cur_on
 	RET
 
@@ -256,6 +314,19 @@ close_connection	;routine for close active connection
 	_prints msg_connectclosed
 	RET
 
+proc_status
+	LD	A,(ftp_cmd_result_code)
+	OR	A
+	RET	Z	
+	_printw wnd_status	;//if error, close connection
+	CALL	wind.A_HEX
+	_closew
+	_isstatus230
+	_isstatus227
+	XOR 	A
+	LD	(ftp_cmd_result_code),A
+	RET
+
 wnd_main
 	DB 0,0
 	DB 32,22
@@ -263,7 +334,7 @@ wnd_main
 	DB 00000011B
 	DB 0,0
 	DB 0
-	DB 1,'Terminal v1.0.2',0
+	DB 1,'Ftp client v0.0.1',0
 
 wnd_cmd
 	DB 0,21
@@ -284,10 +355,11 @@ wnd_status
 	DB 1,'Status',0
 
 msg_keys
+        DB 'Socket server version (ic).',13
         DB 'Press SS+Q for exit.',13
-        DB 'Press SS+W for terminal command.',13
-	DB 'For help type "help" in terminal cmd.',13
-	DB '-------------------------------------',13,13,0
+        DB 'Press SS+W for commands.',13
+	DB 'For help press SS+W + type "help"',13
+	DB '---------------------------------',13,13,0
 
 msg_help 
 	DB 13,'Commands:'
@@ -300,7 +372,7 @@ msg_help
 	DB 13,'Keys'
 	DB 13,'----'
 	DB 13,'RShift+Q - Exit'
-	DB 13,'RShift+W - Enter terminal command'
+	DB 13,'RShift+W - Enter command'
 	DB 13,13,0
 
 msg_about
@@ -314,6 +386,7 @@ msg_about
 inc_addr 	DB 0
 
 msg_status 	DB 31,'Remote: ',13,0
+msg_datastream  DB 'Data stream '
 msg_connected 	DB 'connected',0
 msg_disconnected DB 'disconnected',0
 msg_closeok 	DB 'closed',0
@@ -324,6 +397,7 @@ msg_alredyopen 	DB 13,'Have active connection. Close current first!',13,0
 msg_fdproblem 	DB 13,'Connection descriptor problem',13,0
 msg_connecting 	DB 'Connecting...',0
 msg_connectclosed DB 13,'Disconnected',13,0
+msg_dataerr	DB 'Data stream connection error',13,10,0
 
 cmd_open  	DB 'open',0
 cmd_close 	DB 'close',0
@@ -331,11 +405,29 @@ cmd_help  	DB 'help',0
 cmd_about 	DB 'about',0
 cmd_exit  	DB 'exit',0
 
+;ftp command
+ftp_cmd_user	DB 'user',0
+ftp_cmd_pass	DB 'pass',0
+ftp_cmd_pasv	DB 'PASV',13,10,0
+ftp_cmd_ls	DB 'ls',0
+ftp_cmd_get	DB 'get',0
+ftp_cmd_put	DB 'put',0
+
+;local command
+local_cmd_ls	DB '!ls',0
+local_cmd_dir	DB '!dir',0
+local_cmd_cd	DB '!cd',0
 ;----------------------------- VARIABLES ---------------------
 im_cntr		DB 0
 term_buf	DB 0
 conn_descr	DB 0 ;Connection descriptor
 data_descr	DB 0 ;Descroptor for data channel (FTP mode)
+ftp_cmd_result_code DB 0;status of last ftp code
+;ID of command REQ
+; 1 - USER
+; 2 - PASS
+; 3 - PASW
+ftp_cmd_id	DB 0 
 ;connection status
 connected	DB 0; 0 - not connected 1 - connected
 ;terminal command flag
@@ -344,13 +436,16 @@ termcmd	DB	0 ;0 - not terminal command 1 - terminal command
 cmd_bufer	DEFS 100,0
 inp_bufer	DEFS 256,0
 rcv_bufer	DEFS 255,0
+data_bufer	DEFS 255,0
 
 host_addr_len	dw 0
 host_addr	dw 0
 my_addr		db 0,0,0,0:
 my_port		dw 0 ;my ip+port
 server_addr	db 93,158,134,3
-server_port	dw 23
+server_port	dw 21
+passive_addr	DB 0,0,0,0
+passive_port    DW 0
 
 	include "z80-sdk/sockets/sockets.a80"
 	include "z80-sdk/strings/strings.a80"

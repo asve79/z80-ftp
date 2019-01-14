@@ -1,4 +1,4 @@
 #!/bin/sh
 
-git fetch git@github.com:asve79/z80-sdk.git
+git clone git@github.com:asve79/z80-sdk.git
 
