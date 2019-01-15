@@ -77,6 +77,8 @@ oc1	CALL 	sockets.gethostbyname	;//get ip address
 	_prints msg_openok
 	LD	A,1
 	LD	(connected),A
+	LD	(last_command),A	;//1 - connect command
+	LD	(wait_data),A		;//1 - now we wait connection header with 220 code
 	CALL	showstatus
 	JP	exit
 get_err	_closew
@@ -99,37 +101,11 @@ lex
 	_cmpstr cmd_bufer, cmd_close, 5
 	OR	A
 	JZ	cl2
+	_closew
 	XOR	A
 	LD	(termcmd),A
-	_cur_off
-	_closew
-	_isconnected
-	JNZ	l2			;if not connected
-	LD	A,(conn_descr)
-	CP	0FFh
-	JZ	l2			;if descriptor is bad
-	CALL 	sockets.close
-	OR	A
-	JNZ	l21
-	_prints msg_connectclosed
-	LD	A,#FF
-	LD	(conn_descr),A
-	XOR	A
-	LD	(connected),A
-
-	LD	A,(data_descr)		;//close data connection if it exists
-	CP	0FFh
-	JZ	l2			;if descriptor is bad => no connected
-	CALL 	sockets.close
-	OR	A
-	JNZ	l21
-	_prints msg_connectclosed
-	LD	A,#FF
-	LD	(data_descr),A
-
-	JR	l2
-l21	_prints msg_closeerr
-l2	CALL	showstatus
+	CALL	close_connection
+	CALL	showstatus
 	_cur_on
 	JP	exit
 cl2	
@@ -190,27 +166,51 @@ l5
 	CP	1
 	ENDM
 ;-----------------------------
-; service ready for user
-	MACRO	_isstatus230
-	LD	A,(ftp_cmd_result_code)
+;service ready for new user. Set terminal to enter username mode.
+	MACRO	_isstatus220 exit
+	LD	A,D
+	CP	2
+	JNZ	exit220
+	LD	A,E
+	CP	20
+	JNZ	exit220
+	LD	A,3			;//username ask mode
+	LD	(last_command),A
+	_prints msg_username
+	JP	exit
+exit220
+	ENDM
+
+
+;-----------------------------
+; user logged in. Just message
+	MACRO	_isstatus230 exit
+	LD	A,D
+	CP	2
+	JNZ	exit230
+	LD	A,E
 	CP	230
 	JNZ	exit230
-	LD	HL,inp_bufer
-	LD	DE,ftp_cmd_pasv
-	LD	B,7
-s230l	LD	A,(DE)
-	LD	(HL),A
-	INC	DE
-	INC	HL
-	DJNZ	s230l
-	_prints	inp_bufer
-	LD	BC,7
-	JP	ekcm_snd
+	LD	A,6			;//user audentificated
+	_prints	msg_loggedin
 exit230
 	ENDM
 ;-----------------------------
-;Enter to passive mode
-	MACRO	_isstatus227
+; user logged in. Just message
+	MACRO	_isstatus226 exit
+	LD	A,D
+	CP	2
+	JNZ	exit226
+	LD	A,E
+	CP	226
+	JNZ	exit226
+	LD	A,6			;//user audentificated
+	_prints	msg_closedata
+exit226
+	ENDM
+;-----------------------------
+;Entered to passive mode. open data session
+	MACRO	_isstatus227 exit
 	LD	A,(ftp_cmd_result_code)
 	CP	227
 	JNZ	exit227
@@ -304,14 +304,29 @@ is227l1 LD	A,(HL)
 ;	_closew
 	LD	A,13
 	_printc
-	_prints msg_datastream
+	_prints msg_opendata
 	LD	A,13
 	_printc
-	JR	exit227
+	JP	exit
 is227err
 ;	_closew
 	LD	a,13
 	_printc
 	_prints msg_dataerr
 exit227
+	ENDM
+
+;Need password to enter. Set terminal to enter password mode.
+	MACRO	_isstatus331 exit
+	LD	A,D
+	CP	2
+	JNZ	exit331
+	LD	A,E
+	CP	20
+	JNZ	exit331
+	LD	A,5			;//password ask mode
+	LD	(last_command),A
+	_prints msg_password
+	JP	exit
+exit331
 	ENDM
