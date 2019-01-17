@@ -21,7 +21,7 @@ mloop   LD	A,(wait_data)
 	JR	NZ,mloop_s
 	CALL	get_rcv		;get data from main stream
 	CALL	proc_status	;analyse incoming data from status commands
-;	CALL	check_data	;get data from data stream
+	CALL	get_data	;get data from data stream
 mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop		;wait a press key
 	PUSH 	AF
@@ -119,9 +119,17 @@ enterkeytermmode	;enter key pressed in terminal window
 	JNZ	ekcm_nc		;//if not connected
 	_ifenterusername ekcm_cr	;//if enter username
 	_ifenterpassword ekcm_cr	;//if enter password
-;	_ifenterdir	 ekcm_cr	;//if enter dir command
-;	_ifenterls	 ekcm_cr	;//if enter ls commend
-;	_ifenterquit	 ekcm_cr	;//if entee quit command
+	_ifenterdir	 ekcm_cr	;//if enter dir command
+	_ifenterls	 ekcm_cr	;//if enter ls commend
+	_ifenterquit	 ekcm_cr	;//if enter quit command
+	_ifenterclose	 ekcm_cr	;//if enter close command
+	_ifenterbye	 ekcm_cr	;//if enter bye command
+;	_ifenterget	 ekcm_cr	;//if enter get command
+;	_ifenterput	 ekcm_cr	;//if enter put command
+	_ifenterpwd	 ekcm_cr	;//if enter pwd command
+	_ifentercd	 ekcm_cr	;//if enter cd command	
+	LD	A,13
+	_printc
 	_prints msg_unknown_cmd
 	JP	ekcm_nc
 ekcm_cr	
@@ -171,7 +179,13 @@ puttotermbufer	;put symbol to terminal bufer
 puttobufer	;main procedure for put to bufer;TODO make insert mode with shift content
 	POP	AF
 	LD	(HL),A
-	_printc		;out character
+	LD	A,(writing_pass)
+	OR	A
+	JR	Z,ptcb2
+	LD	A,'*'		;//if writing password mode, hide symbols
+	JR	ptcb3
+ptcb2	LD	A,(HL)
+ptcb3	_printc		;out character
 	RET
 
 exit	_cur_off		;TOOD: close connection if needed
@@ -238,7 +252,7 @@ chd1	recv	data_descr,data_bufer,255
 	LD	A,'!'
 	_printc
 	_closew
-	CALL	close_connection
+	CALL	close_data_connection
 	JR	chd4
 chd5	_cur_off
 chd2	LD	A,B	;//----------- get info from bufer ------------
@@ -305,23 +319,24 @@ rcv4	_cur_on
 close_connection	;routine for close active connection
 	LD	A,(conn_descr) ;//main connection descriptor
 	CP	#FF	;//check descriptor
-	JZ	cc_data
+	JZ	close_data_connection
 	CALL	sockets.close
 	LD	A,#FF
 	LD	(conn_descr),A
 	XOR	A
 	LD	(connected),A
-cc_data	LD	A,(data_descr)	;//data descriptor
-	CP	#FF	;//check descriptor
+	LD	(wait_data),A
+	LD	A,2
+	LD	(last_command),A	;//2 - disconnect(ed)
+	_prints msg_connectclosed
+close_data_connection		;//entrypoint for close data connection
+	LD	A,(data_descr)	;//data descriptor
+	CP	#FF		;//check descriptor
 	JZ	cc_cl
 	CALL	sockets.close
 	LD	A,#FF
 	LD	(data_descr),A	
-cc_cl	LD	A,2
-	LD	(last_command),A	;//2 - disconnect(ed)
-	XOR	A
-	LD	(wait_data),A
-	_prints msg_connectclosed
+cc_cl	
 	RET
 
 ;//parce reveve buffer for commands (per one line)

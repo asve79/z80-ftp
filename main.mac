@@ -209,8 +209,11 @@ exit226
 ;-----------------------------
 ;Entered to passive mode. open data session
 	MACRO	_isstatus227 exit
-	LD	A,(ftp_cmd_result_code)
-	CP	227
+	LD	A,D
+	CP	2
+	JNZ	exit227
+	LD	A,E
+	CP	27
 	JNZ	exit227
 	LD	HL,rcv_bufer
 is227l1 LD	A,(HL)
@@ -305,6 +308,12 @@ is227l1 LD	A,(HL)
 	_prints msg_opendata
 	LD	A,13
 	_printc
+
+	LD	A,(last_command)
+	_isListRequest exit
+;	_isRecvRequest exit
+;	_isSendRequest exit	
+
 	JP	exit
 is227err
 ;	_closew
@@ -324,6 +333,8 @@ exit227
 	JNZ	exit331
 	LD	A,5			;//password ask mode
 	LD	(last_command),A
+	LD	A,1
+	LD	(writing_pass),A	;//hide enter symbols mode
 	_prints msg_password
 	JP	exit
 exit331
@@ -363,13 +374,13 @@ ieun2	_findzero inp_bufer
 	LD	B,0
 ;	_watch_registers
 	LDDR
-	_watch_bufer inp_bufer,20	;//debug
+;	_watch_bufer inp_bufer,20	;//debug
 	LD	DE,inp_bufer
 	LD	HL,ftp_cmd_user
 	LD	BC,5
 ;	_watch_registers
 	LDIR				;//insert USER command before username
-	_watch_bufer inp_bufer,20	;//debug
+;	_watch_bufer inp_bufer,20	;//debug
 	JP	exit
 ieun_e	
 	ENDM
@@ -379,6 +390,8 @@ ieun_e
 	LD	A,(last_command)
 	CP	5			;//code 5 - ask password
 	JNZ	iepw_e
+	XOR	A
+	LD	(writing_pass),A	;//turn off hide symbols mode
 	LD	HL,inp_bufer
 	LD	A,(HL)			
 	JNZ	iepw2			;if password is entered
@@ -398,13 +411,128 @@ iepw2	_findzero inp_bufer
 	INC	DE
 	INC	DE
 	INC	DE
-	IN	A
+	INC	A
 	LD	C,A			;//move username to rigth at 5 symbols in bufer 
 	LDDR
 	LD	DE,inp_bufer
 	LD	HL,ftp_cmd_pass
 	LD	BC,5
 	LDIR				;//insert PASS command before username
+	LD	A,6
+	LD	(last_command),A
 	JP	exit
 iepw_e	
+	ENDM
+
+;---------------------------------
+;if enter quit command in terminal
+	MACRO	_ifenterquit exit
+	_cmpstr	inp_bufer,cmd_quit,4
+	OR	A
+	JZ	iequ_e
+	CALL	close_connection
+	JP	exit
+iequ_e
+	ENDM
+
+;---------------------------------
+;if enter close command in terminal
+	MACRO	_ifenterclose exit
+	_cmpstr	inp_bufer,cmd_close,5
+	OR	A
+	JZ	iecl_e
+iecl_c	CALL	close_connection
+	JP	exit
+iecl_e
+	ENDM
+
+;---------------------------------
+;if enter bye command in terminal	;//TODO: sent close command to server, then close connection
+	MACRO	_ifenterbye exit
+	_cmpstr	inp_bufer,cmd_bye,3
+	OR	A
+	JNZ	iecl_c
+	ENDM
+
+;---------------------------------
+;if enter 'dir' command in terminal
+	MACRO _ifenterdir exit
+	_cmpstr inp_bufer,cmd_dir,3
+	OR	A
+	JNZ	iels_l1
+	ENDM
+;---------------------------------
+;if enter 'ls' command in terminal
+	MACRO _ifenterls exit
+	_cmpstr inp_bufer,cmd_ls,2
+	OR	A
+	JZ	iels_e
+iels_l1	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_pasv
+	LD	BC,4
+	LDIR
+	LD	A,7			;//code 7 - ls/dir request
+	LD	(last_command),A
+	JP	exit
+iels_e
+	ENDM
+
+;---------------------------------
+;if enter 'cd directory' command in terminal
+	MACRO _ifentercd exit
+	_cmpstr inp_bufer,cmd_cd,2
+	OR	A
+	JZ	iecd_e
+	LD	A,(inp_bufer)		
+	OR	A
+	JZ	iecd_l1			;if path not entered
+	_findzero inp_bufer
+	PUSH	HL
+	POP	DE
+	INC	DE
+;	INC	A
+	LD	B,0
+	LD	C,A			;//move directory to rigth at 4 symbols in bufer 
+	LDDR	
+;	_watch_bufer inp_bufer, 20	;//debug
+iecd_l1	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_cwd
+	LD	BC,4
+	LDIR
+	LD	A,11			;//code 11 - cd request
+	LD	(last_command),A
+	JP	exit
+iecd_e
+	ENDM
+
+;---------------------------------
+;if enter 'pwd' command in terminal
+	MACRO _ifenterpwd exit
+	_cmpstr inp_bufer,cmd_pwd,3
+	OR	A
+	JZ	iepwd_e
+	LD	DE,inp_bufer
+	LD	HL,cmd_pwd
+	LD	BC,3
+	LDIR
+	LD	A,10			;//code 10 - pwd request
+	LD	(last_command),A
+	JP	exit
+iepwd_e
+	ENDM
+
+;---------------------------------
+;it need make LIST rewquest
+	MACRO	_isListRequest exit
+	CP	7			;//code 7 - LIST request
+	JNZ	ilre_e
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_list
+	LD	BC,7
+	LDIR
+	LD	A,11
+	LD	(last_command),A	;//LIST command requested
+	LD	BC,6
+	JP	ekcm_snd		;//send data from inp_bufer (BC=length)
+ilre_e
 	ENDM

@@ -85,17 +85,19 @@ cmd_close 	DB 'close',0
 cmd_help  	DB 'help',0
 cmd_about 	DB 'about',0
 cmd_exit  	DB 'exit',0
-
-;ftp_client_commands
-client_cmd_quit DB 'quit',0
-client_cmd_ls	DB 'ls',0
-client_cmd_dir	DB 'dir',0
+cmd_quit	DB 'quit',0
+cmd_ls		DB 'ls',0
+cmd_dir		DB 'dir',0
+cmd_pwd		DB 'pwd',0
+cmd_bye		DB 'bye',0
+cmd_cd		DB 'cd',0
 
 ;ftp command
 ftp_cmd_user	DB 'USER ',0
 ftp_cmd_pass	DB 'PASS ',0
 ftp_cmd_pasv	DB 'PASV',13,10,0
-ftp_cmd_ls	DB 'LIST',0
+ftp_cmd_list	DB 'LIST',13,10,0
+ftp_cmd_cwd	DB 'CWD ',13,10,0
 ftp_cmd_get	DB 'get',0
 ftp_cmd_put	DB 'put',0
 
@@ -110,6 +112,7 @@ conn_descr	DB 0 ;Connection descriptor
 data_descr	DB 0 ;Descroptor for data channel (FTP mode)
 ftp_cmd_result_code DB 0;status of last ftp code
 user_anonymous	DB 0 ;0 - non anonymous 1 - anonymous
+writing_pass	DB 0 ;0 - show input symbols 1 - hide input symbols (show *)
 ;ID of command REQ
 ; 1 - USER
 ; 2 - PASS
@@ -126,6 +129,10 @@ user_anonymous	DB 0 ;0 - non anonymous 1 - anonymous
 ;7 - ls/dir request
 ;8 - passive mode on request
 ;9 - service ready for new user
+;10 - pwd request
+;11 - list command requested.
+;12 - 'cd' request
+
 last_command	DB 0
 
 wait_data	DB 0 ;0 - no waitm 1 - wait
