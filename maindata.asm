@@ -72,11 +72,13 @@ msg_dataerr	DB 'Data stream connection error',13,10,0
 msg_loggedin	DB 'User logged in.',0
 msg_closedata	DB 'Data chanel closed.',0
 msg_opendata	DB 'Data chanel opened.',0
+msg_unknown_cmd DB 'Unknown command.',0
 
 msg_username	DB 'Username (anonymous): ',0
 msg_password	DB 'Password: ',0
 
 txt_anonymous	DB 'anonymous',0
+txt_zxpass	DB 'zx-spectrum.ftp.client@ae-nest.com',0
 
 cmd_open  	DB 'open',0
 cmd_close 	DB 'close',0
@@ -85,6 +87,7 @@ cmd_about 	DB 'about',0
 cmd_exit  	DB 'exit',0
 
 ;ftp_client_commands
+client_cmd_quit DB 'quit',0
 client_cmd_ls	DB 'ls',0
 client_cmd_dir	DB 'dir',0
 
@@ -106,6 +109,7 @@ term_buf	DB 0
 conn_descr	DB 0 ;Connection descriptor
 data_descr	DB 0 ;Descroptor for data channel (FTP mode)
 ftp_cmd_result_code DB 0;status of last ftp code
+user_anonymous	DB 0 ;0 - non anonymous 1 - anonymous
 ;ID of command REQ
 ; 1 - USER
 ; 2 - PASS

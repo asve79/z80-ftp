@@ -178,10 +178,8 @@ l5
 	LD	(last_command),A
 	_prints msg_username
 	JP	exit
-exit220
+exit220 
 	ENDM
-
-
 ;-----------------------------
 ; user logged in. Just message
 	MACRO	_isstatus230 exit
@@ -315,18 +313,98 @@ is227err
 	_prints msg_dataerr
 exit227
 	ENDM
-
+;------------------------------------------------------------
 ;Need password to enter. Set terminal to enter password mode.
 	MACRO	_isstatus331 exit
 	LD	A,D
-	CP	2
+	CP	3
 	JNZ	exit331
 	LD	A,E
-	CP	20
+	CP	31
 	JNZ	exit331
 	LD	A,5			;//password ask mode
 	LD	(last_command),A
 	_prints msg_password
 	JP	exit
 exit331
+	ENDM
+;-------------------
+;If entered username
+	MACRO	_ifenterusername exit
+	LD	A,(last_command)
+	CP	3			;//code 3 - ask username
+	JNZ	ieun_e
+	XOR	A
+	LD	(user_anonymous),A	;//purpose what non anonymous user
+;	_watch_bufer inp_bufer,20	;//debug
+	LD	HL,inp_bufer
+	LD	A,(HL)
+	OR	A
+	JNZ	ieun2			;//if user name is entered
+	PUSH	HL
+	POP	DE
+	LD	HL,txt_anonymous	;//if not entered, then username is anonymous
+	LD	BC,10
+	LDIR
+	_prints inp_bufer		;//print "anonymous" string
+;	_watch_bufer inp_bufer,20	;//debug
+	LD	A,1
+	LD	(user_anonymous),A	;//purpose what non anonymous user
+ieun2	_findzero inp_bufer
+	PUSH	HL
+	POP	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	A
+	LD	C,A			;//move username to rigth at 5 symbols in bufer 
+	LD	B,0
+;	_watch_registers
+	LDDR
+	_watch_bufer inp_bufer,20	;//debug
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_user
+	LD	BC,5
+;	_watch_registers
+	LDIR				;//insert USER command before username
+	_watch_bufer inp_bufer,20	;//debug
+	JP	exit
+ieun_e	
+	ENDM
+;-------------------
+;If entered password 
+	MACRO	_ifenterpassword exit
+	LD	A,(last_command)
+	CP	5			;//code 5 - ask password
+	JNZ	iepw_e
+	LD	HL,inp_bufer
+	LD	A,(HL)			
+	JNZ	iepw2			;if password is entered
+	LD	A,(user_anonymous)
+	OR	A
+	JZ	iepw2			;if non anonymous user, non modify password
+	PUSH	HL
+	POP	DE
+	LD	HL,txt_zxpass	;//if anonymous, set password as zx-spectrum.ftp.client@ae-nest.com
+	LD	BC,35
+	LDIR
+iepw2	_findzero inp_bufer
+	PUSH	HL
+	POP	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	IN	A
+	LD	C,A			;//move username to rigth at 5 symbols in bufer 
+	LDDR
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_pass
+	LD	BC,5
+	LDIR				;//insert PASS command before username
+	JP	exit
+iepw_e	
 	ENDM

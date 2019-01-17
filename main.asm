@@ -1,6 +1,7 @@
 	module main
 
 	include "main.mac"
+	include "debug.mac"
 	include "z80-sdk/strings/strings.mac"
 	include "z80-sdk/windows_bmw/wind.mac"
 	include "z80-sdk/sockets/sockets.mac"
@@ -18,8 +19,8 @@ mloop   LD	A,(wait_data)
 	JR	Z,mloop_s	;if we no wait responce to command or receve any data
 	CALL	cangetdata
 	JR	NZ,mloop_s
-	CALL	get_rcv	;get data from main stream
-;	CALL	proc_status	;analyse incoming data from status commands
+	CALL	get_rcv		;get data from main stream
+	CALL	proc_status	;analyse incoming data from status commands
 ;	CALL	check_data	;get data from data stream
 mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop		;wait a press key
@@ -116,7 +117,15 @@ eccm1	_fillzero cmd_bufer, 100	;clear command buffer
 enterkeytermmode	;enter key pressed in terminal window
 	_isconnected
 	JNZ	ekcm_nc		;//if not connected
-	_findzero inp_bufer
+	_ifenterusername ekcm_cr	;//if enter username
+	_ifenterpassword ekcm_cr	;//if enter password
+;	_ifenterdir	 ekcm_cr	;//if enter dir command
+;	_ifenterls	 ekcm_cr	;//if enter ls commend
+;	_ifenterquit	 ekcm_cr	;//if entee quit command
+	_prints msg_unknown_cmd
+	JP	ekcm_nc
+ekcm_cr	
+	_findzero inp_bufer	;//find EOL
 	LD	C,A
 	LD	A,13		;/add 13 code for <CR><LF> EOL command
 	LD	(HL),A
@@ -135,10 +144,11 @@ ekcm_snd
 	OR	A
 	JZ	ekcm_ok
 	_printw wnd_status	;//if error while send data
-	LD	A,'E'		;//error status TODO: close connection
+	LD	A,'E'		
 	_printc
 	_closew
 	_cur_on
+	CALL	close_connection
 	JP	ekcm_nc
 ekcm_ok	_printw wnd_status	;//success status
 	LD	A,'#'
@@ -149,6 +159,7 @@ ekcm_nc	_fillzero inp_bufer,255
 	LD	A,13
 	_printc
 	JP	mloop
+;---------------------------
 ;- routine -
 puttocmdbufer	;put symbol in command bufer
 	PUSH	AF
@@ -323,11 +334,13 @@ cc_cl	LD	A,2
 ;// A = 1 if OK
 ;// A > 1 if no code in this line
 parse_rcv_code
+	PUSH	HL
 ;	LD	HL,recv_bufer
 	LD	A,(HL)
 	OR	A
 	JZ	parr_ex
 	LD	A,(HL)
+	sub	'0'
 	LD	B,A
 	INC	HL
 	LD	A,2		;//analyse string for code
@@ -336,35 +349,46 @@ parse_rcv_code
 	POP	BC
 	INC	A		;//A=A+1. If a=1 then OK, else A>1
 	PUSH	AF
+;	CALL	wind.A_HEX	;//debug
 	LD	A,B
-	SUB	'0'
 	LD	D,A
 	POP	AF
-parr_ex RET	
+parr_ex	POP	HL
+	RET	
 
 proc_status
+;	LD	A,'>'		;//debug
+;	_printc
 	LD	HL,rcv_bufer
 pstat_l	LD	A,(HL)
 	OR	A
-	RET	Z		;//if no data
+	JZ	pstat_k		;//if no data
+;	_printc			;//debug
 	CALL	parse_rcv_code
 	OR	A
-	RET	Z		;//if nothing to parce
+	JZ	pstat_k		;//if nothing to parce
 	LD	A,E
+	PUSH	DE
+	PUSH	HL
 	_printw wnd_status	;//if error, close connection
 	CALL	wind.A_HEX
 	_closew
+	POP	HL
+	POP	DE
 	_isstatus220 pstat_e	;//service ready for new user (after connect). turn on login mode
-	_isstatus331 pstat_e	;//after USER command purn on passord mode
+	_isstatus331 pstat_e	;//after USER command. turn on passord mode
 	_isstatus230 pstat_e	;//afrer PASS command. just print "seccion open"
 	_isstatus227 pstat_e	;//after PASV command. open data connection.
 	_isstatus226 pstat_e	;//data chanel is closed. exchange ended
 pstat_e	CALL	strings.ptrtonextline
 	JZ	pstat_l
+pstat_k	XOR	A
+	LD	(rcv_bufer),A
 	RET
 
 	include "maindata.asm"
 	include "z80-sdk/sockets/sockets.a80"
 	include "z80-sdk/strings/strings.a80"
+	include "debug.asm"
 
 	endmodule

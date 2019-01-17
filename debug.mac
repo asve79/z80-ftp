@@ -1,0 +1,13 @@
+	MACRO	_watch_bufer addr, len
+	PUSH	BC
+	PUSH	HL
+	LD	HL,addr
+	LD	B,len
+	CALL	debug.watch_bufer
+	POP	HL
+	POP	BC
+	ENDM
+    
+	MACRO	_watch_registers
+	CALL	debug.watch_registers
+	ENDM
