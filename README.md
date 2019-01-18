@@ -18,6 +18,9 @@ Support commands:
 * quit
 * close
 * bye
+* mkdir <directory>
+* rmdir <directory>
+* rm <filename>
 
 To do:
 * 'cdup' command
@@ -25,6 +28,8 @@ To do:
 * 'put' command
 * 'open' command on terminal
 * 'user' command
+* 'cat' command
+* migrate command mode to console.
 
 build:
 ```bash

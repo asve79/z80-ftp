@@ -536,3 +536,108 @@ iepwd_e
 	JP	ekcm_snd		;//send data from inp_bufer (BC=length)
 ilre_e
 	ENDM
+
+;---------------------------------
+;if enter 'mkdir directory' command in terminal
+	MACRO _isentermkdir exit
+	_cmpstr inp_bufer,cmd_mkdir,5
+	OR	A
+	JZ	iemkd_e
+	LD	A,(inp_bufer)		
+	OR	A
+	JNZ	iemkd1			;if directory not entered
+	_findzero inp_bufer
+	_prints msg_specifydirectory
+	JP	exit
+iemkd1	PUSH	HL
+	POP	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+;	INC	A
+	LD	B,0
+	LD	C,A			;//move directory to rigth at 4 symbols in bufer 
+	LDDR	
+;	_watch_bufer inp_bufer, 20	;//debug
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_mkd
+	LD	BC,6
+	LDIR
+	LD	A,14			;//code 14 - mkdirectory request
+	LD	(last_command),A
+	JP	exit
+iemkd_e
+	ENDM
+
+;---------------------------------
+;if enter 'rmdir directory' command in terminal
+	MACRO _isenterrmdir exit
+	_cmpstr inp_bufer,cmd_rmdir,5
+	OR	A
+	JZ	iermd_e
+	LD	A,(inp_bufer)		
+	OR	A
+	JNZ	iermd1			;if directory not entered
+	_findzero inp_bufer
+	_prints msg_specifydirectory
+	JP	exit
+iermd1	PUSH	HL
+	POP	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+;	INC	A
+	LD	B,0
+	LD	C,A			;//move directory to rigth at 4 symbols in bufer 
+	LDDR	
+;	_watch_bufer inp_bufer, 20	;//debug
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_rmd
+	LD	BC,6
+	LDIR
+	LD	A,13			;//code 13 - remove directory request
+	LD	(last_command),A
+	JP	exit
+iermd_e
+	ENDM
+
+;---------------------------------
+;if enter 'rm filename' command in terminal
+	MACRO _isenterrm exit
+	_cmpstr inp_bufer,cmd_rm,2
+	OR	A
+	JZ	ierm_e
+	LD	A,(inp_bufer)		
+	OR	A
+	JNZ	ierm1			;if filenename not entered
+	_findzero inp_bufer
+	_prints msg_specifyfilename
+	JP	exit
+ierm1	PUSH	HL
+	POP	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+	INC	DE
+;	INC	A
+	LD	B,0
+	LD	C,A			;//move filename to rigth at 4 symbols in bufer 
+	LDDR	
+;	_watch_bufer inp_bufer, 20	;//debug
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_dele
+	LD	BC,6
+	LDIR
+	LD	A,13			;//code 15 - remove filename request
+	LD	(last_command),A
+	JP	exit
+ierm_e
+	ENDM

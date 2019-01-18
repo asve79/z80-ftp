@@ -124,10 +124,14 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterquit	 ekcm_cr	;//if enter quit command
 	_ifenterclose	 ekcm_cr	;//if enter close command
 	_ifenterbye	 ekcm_cr	;//if enter bye command
-;	_ifenterget	 ekcm_cr	;//if enter get command
-;	_ifenterput	 ekcm_cr	;//if enter put command
+;	_ifenterget	 ekcm_cr	;//if enter get <file> command
+;	_ifenterput	 ekcm_cr	;//if enter put <file> command
 	_ifenterpwd	 ekcm_cr	;//if enter pwd command
-	_ifentercd	 ekcm_cr	;//if enter cd command	
+	_ifentercd	 ekcm_cr	;//if enter cd <directory> command
+;	_isentercat	 ekcm_cr	;//if enter cat <file> command
+	_isenterrmdir	 ekcm_cr	;//if enter rmdir <directory> command
+	_isentermkdir	 ekcm_cr	;//if enter mkdir <directory> command
+	_isenterrm	 ekcm_cr	;//if neter rm <file> command
 	LD	A,13
 	_printc
 	_prints msg_unknown_cmd

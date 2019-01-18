@@ -5,7 +5,7 @@ wnd_main
 	DB 00000011B
 	DB 0,0
 	DB 0
-	DB 1,'Ftp client v0.0.1',0
+	DB 1,'Ftp client v0.0.7',0
 
 wnd_cmd
 	DB 0,21
@@ -73,7 +73,10 @@ msg_loggedin	DB 'User logged in.',0
 msg_closedata	DB 'Data chanel closed.',0
 msg_opendata	DB 'Data chanel opened.',0
 msg_unknown_cmd DB 'Unknown command.',0
-
+msg_specifydirectory
+		DB 'Plese specify directory name',0
+msg_specifyfilename
+		DB 'Plese specify filename',0
 msg_username	DB 'Username (anonymous): ',0
 msg_password	DB 'Password: ',0
 
@@ -91,6 +94,10 @@ cmd_dir		DB 'dir',0
 cmd_pwd		DB 'pwd',0
 cmd_bye		DB 'bye',0
 cmd_cd		DB 'cd',0
+cmd_mkdir	DB 'mkdir',0
+cmd_rmdir	DB 'rmdir',0
+cmd_rm		DB 'rm',0
+cmd_cat		DM 'cat',0
 
 ;ftp command
 ftp_cmd_user	DB 'USER ',0
@@ -98,8 +105,10 @@ ftp_cmd_pass	DB 'PASS ',0
 ftp_cmd_pasv	DB 'PASV',13,10,0
 ftp_cmd_list	DB 'LIST',13,10,0
 ftp_cmd_cwd	DB 'CWD ',13,10,0
-ftp_cmd_get	DB 'get',0
-ftp_cmd_put	DB 'put',0
+ftp_cmd_retr	DB 'RETR ',0
+ftp_cmd_mkd	DB 'MKD   ',0
+ftp_cmd_rmd	DB 'RMD   ',0
+ftp_cmd_dele	DB 'DELE ',0
 
 ;local command
 local_cmd_ls	DB '!ls',0
@@ -132,6 +141,9 @@ writing_pass	DB 0 ;0 - show input symbols 1 - hide input symbols (show *)
 ;10 - pwd request
 ;11 - list command requested.
 ;12 - 'cd' request
+;13 - rmdir request
+;14 - mkdir request
+;15 - rm <file> request
 
 last_command	DB 0
 
