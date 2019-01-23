@@ -313,7 +313,7 @@ is227l1 LD	A,(HL)
 	_isListRequest exit
 ;	_isRecvRequest exit
 ;	_isSendRequest exit	
-
+;	_isCatRequest exit	;//chow file content
 	JP	exit
 is227err
 ;	_closew
@@ -640,4 +640,35 @@ ierm1	PUSH	HL
 	LD	(last_command),A
 	JP	exit
 ierm_e
+	ENDM
+
+;---------------------------------
+;if enter 'cat <filename>' command in terminal
+	MACRO _ifentercat exit
+	_cmpstr inp_bufer,cmd_cat,3
+	OR	A
+	JZ	iecat_e
+	LD	A,(inp_bufer)		
+	OR	A
+	JNZ	iecat1			;if filenename not entered
+	_findzero inp_bufer
+	_prints msg_specifyfilename
+	JP	exit
+iecat1	PUSH	HL
+	POP	DE
+	LD	B,12
+iecat2	INC	DE
+	DJNZ	iecat2
+	INC	A
+	LD	B,0
+	LD	C,A			;//move filename to rigth at 10 symbols in bufer for 'pasv 0,recv <filename>'
+	LDDR	
+	LD	DE,inp_bufer
+	LD	HL,ftp_cmd_pasv
+	LD	BC,5
+	LDIR
+	LD	A,16			;//code 16 - cat request
+	LD	(last_command),A
+	JP	exit
+iecat_e
 	ENDM

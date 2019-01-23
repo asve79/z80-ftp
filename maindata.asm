@@ -144,20 +144,16 @@ writing_pass	DB 0 ;0 - show input symbols 1 - hide input symbols (show *)
 ;13 - rmdir request
 ;14 - mkdir request
 ;15 - rm <file> request
+;16 - cat <file> request
 
 last_command	DB 0
 
 wait_data	DB 0 ;0 - no waitm 1 - wait
 ftp_cmd_id	DB 0 
-;connection status
-connected	DB 0; 0 - not connected 1 - connected
-;terminal command flag
-termcmd	DB	0 ;0 - not terminal command 1 - terminal command
+
 ;buffer for intput. MAX 255 bytes
-cmd_bufer	DEFS 100,0
-inp_bufer	DEFS 256,0
-rcv_bufer	DEFS 255,0
-data_bufer	DEFS 255,0
+input_bufer	DEFS #FF,0
+data_bufer	DEFS #FF,0
 
 host_addr_len	dw 0
 host_addr	dw 0

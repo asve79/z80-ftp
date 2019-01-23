@@ -14,21 +14,21 @@ PROG
 	CALL	showstatus
 	_cur_on
 
-mloop   LD	A,(wait_data)	
-	OR	A
-	JR	Z,mloop_s	;if we no wait responce to command or receve any data
-	CALL	cangetdata
-	JR	NZ,mloop_s
-	CALL	get_rcv		;get data from main stream
-	CALL	proc_status	;analyse incoming data from status commands
-	CALL	get_data	;get data from data stream
+mloop   ;LD	A,(wait_data)	
+	;OR	A
+	;JR	Z,mloop_s	;if we no wait responce to command or receve any data
+	;CALL	cangetdata
+	;JR	NZ,mloop_s
+	;CALL	get_rcv		;get data from main stream
+	;CALL	proc_status	;analyse incoming data from status commands
+	;CALL	get_data	;get data from data stream
 mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop		;wait a press key
-	PUSH 	AF
-	_iscmdmode		;if comman mode on go to cmdmodeproc
-	JZ	cmdmodeproc
+	;PUSH 	AF
+	;_iscmdmode		;if comman mode on go to cmdmodeproc
+	;JZ	cmdmodeproc
 	;process terminal mode
-	POP	AF
+	;POP	AF
 	CP	01Dh
 	JZ	exit		;if SS+Q pressed, exit
 	CP	#08		;left cursor key pressed
@@ -39,58 +39,17 @@ mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop
 	CP	#18		;down cursor key pressed
 	JZ	mloop
-	CP	01Ch		;if Ss+W pressed - terminal command
-	JZ	opencmdmode	
+	;CP	01Ch		;if Ss+W pressed - terminal command
+	;JZ	opencmdmode	
 	CP	#7F		;//delete key pressed
 	JZ	delsymtermmode	
 	CP	13		;//enter key pressed
 	JZ	enterkeytermmode
 	CALL	puttotermbufer	;//put char to command bufer and print
 	JP	mloop
-cmdmodeproc ;process command mode
-	POP	AF
-	CP	#08		;left cursor key pressed
-	JZ	mloop
-	CP	#19		;right cursor key pressed
-	JZ	mloop
-	CP	#1A		;up cursor key pressed
-	JZ	mloop
-	CP	#18		;down cursor key pressed
-	JZ	mloop
-	CP	01Dh
-	JZ	closecmdmode	;if SS+Q pressed, exit
-	CP	01Ch		;if Ss+W pressed - terminal command
-	JZ	closecmdmode
-	CP	#7F		;//delete key pressed
-	JZ	delsymcmdmode	
-	CP	13		;//enter key pressed
-	JZ	enterkeycmdmode
-	CALL	puttocmdbufer	;//put char to terminal bufer and print
-	JP	mloop
 
-opencmdmode ;open command window
-	LD	A,1		;if terminal command mode is off
-	LD	(termcmd),A	;turn on termianl mode
-	_cur_off
-	_printw	wnd_cmd		;print command window
-	_prints	cmd_bufer	;print content of command buffer
-	_cur_on
-	JP	mloop
-;----
-closecmdmode ;close the commend window
-	XOR	A
-	LD	(termcmd),A
-	_cur_off		
-	_endw
-	_cur_on
-	JP	mloop
-;-----
-delsymcmdmode	;delete symbol in command bufer
-	_findzero cmd_bufer	;//get ptr on last symbol+1 in buffer
-	JR	delsymproc	;//get ptr on last symbol+1 in buffer
 delsymtermmode	;delete symbol in terminal mode
-	_findzero inp_bufer	;//get ptr on last symbol+1 in buffer
-delsymproc	;delete symbol main proc
+	_findzero input_bufer	;//get ptr on last symbol+1 in buffer
 	OR	A
 	JZ	mloop		;//if nothing in bufer (length=0)
 	DEC	HL
@@ -103,108 +62,44 @@ delsymproc	;delete symbol main proc
 	LD	A,8		;//left again
 	_printc
 	JP	mloop
-;----
-enterkeycmdmode	;enter key pressed in command window. execute command if it exists
-	_isopencommand  cmd_bufer,eccm1	;//'open'  command
-	_isclosecommand cmd_bufer,eccm1 ;//'close' command
-	_ishelpcommand  cmd_bufer,eccm1	;//'help' command
-	_isaboutcommand cmd_bufer,eccm1	;//'about' command
-	_isexitcommand cmd_bufer,eccm1	;//'about' command
-	_clearwindow			;// wrong command:  clear window
-eccm1	_fillzero cmd_bufer, 100	;clear command buffer
-	JP 	mloop
-;----
+
 enterkeytermmode	;enter key pressed in terminal window
-	_isconnected
-	JNZ	ekcm_nc		;//if not connected
-	_ifenterusername ekcm_cr	;//if enter username
-	_ifenterpassword ekcm_cr	;//if enter password
-	_ifenterdir	 ekcm_cr	;//if enter dir command
-	_ifenterls	 ekcm_cr	;//if enter ls commend
-	_ifenterquit	 ekcm_cr	;//if enter quit command
-	_ifenterclose	 ekcm_cr	;//if enter close command
-	_ifenterbye	 ekcm_cr	;//if enter bye command
-;	_ifenterget	 ekcm_cr	;//if enter get <file> command
-;	_ifenterput	 ekcm_cr	;//if enter put <file> command
-	_ifenterpwd	 ekcm_cr	;//if enter pwd command
-	_ifentercd	 ekcm_cr	;//if enter cd <directory> command
-;	_isentercat	 ekcm_cr	;//if enter cat <file> command
-	_isenterrmdir	 ekcm_cr	;//if enter rmdir <directory> command
-	_isentermkdir	 ekcm_cr	;//if enter mkdir <directory> command
-	_isenterrm	 ekcm_cr	;//if neter rm <file> command
+	_isopencommand  ekcm_nc		;//'open'  command
+	_isclosecommand ekcm_nc 	;//'close' command
+	_ishelpcommand  ekcm_nc		;//'help' command
+	_isaboutcommand ekcm_nc		;//'about' command
+	_isexitcommand	ekcm_nc		;//'about' command
+	_ifenterusername ekcm_nc	;//if enter username
+	_ifenterpassword ekcm_nc	;//if enter password
+	_ifenterdir	ekcm_nc		;//if enter dir command
+	_ifenterls	ekcm_nc		;//if enter ls commend
+	_ifenterquit	ekcm_nc		;//if enter quit command
+	_ifenterclose	ekcm_nc		;//if enter close command
+	_ifenterbye	ekcm_nc		;//if enter bye command
+;	_ifenterget	ekcm_nc		;//if enter get <file> command
+;	_ifenterput	ekcm_nc		;//if enter put <file> command
+	_ifenterpwd	ekcm_nc		;//if enter pwd command
+	_ifentercd	ekcm_nc		;//if enter cd <directory> command
+;	_isentercat	ekcm_nc		;//if enter cat <file> command
+	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
+	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
+	_isenterrm	ekcm_nc		;//if neter rm <file> command
 	LD	A,13
 	_printc
 	_prints msg_unknown_cmd
-	JP	ekcm_nc
-ekcm_cr	
-	_findzero inp_bufer	;//find EOL
-	LD	C,A
-	LD	A,13		;/add 13 code for <CR><LF> EOL command
-	LD	(HL),A
-	INC	HL
-	LD	A,10		;/add 10 code for <CR><LF> EOL command
-	LD	(HL),A
-	INC	C
-	LD	B,0
-	INC	BC
-ekcm_snd
-	XOR	A		;//reset last status code for we can undestand what new commend arrived
-	LD	(ftp_cmd_result_code),A
-	LD	A,(conn_descr)
-	LD	HL,inp_bufer
-	CALL	sockets.send	;//send buffer content
-	OR	A
-	JZ	ekcm_ok
-	_printw wnd_status	;//if error while send data
-	LD	A,'E'		
-	_printc
-	_closew
-	_cur_on
-	CALL	close_connection
-	JP	ekcm_nc
-ekcm_ok	_printw wnd_status	;//success status
-	LD	A,'#'
-	_printc
-	_closew
-	_cur_on
-ekcm_nc	_fillzero inp_bufer,255
+ekcm_nc	_fillzero input_bufer,#FF
 	LD	A,13
 	_printc
 	JP	mloop
 ;---------------------------
-;- routine -
-puttocmdbufer	;put symbol in command bufer
-	PUSH	AF
-	_findzero cmd_bufer
-	JR	puttobufer
-puttotermbufer	;put symbol to terminal bufer
-	PUSH 	AF
-	_findzero inp_bufer
-puttobufer	;main procedure for put to bufer;TODO make insert mode with shift content
-	POP	AF
-	LD	(HL),A
-	LD	A,(writing_pass)
-	OR	A
-	JR	Z,ptcb2
-	LD	A,'*'		;//if writing password mode, hide symbols
-	JR	ptcb3
-ptcb2	LD	A,(HL)
-ptcb3	_printc		;out character
-	RET
-
-exit	_cur_off		;TOOD: close connection if needed
+;- routines -
+;- exit. close all connections -
+exit	_cur_off
+	CALL	close_connection
 	_closew
-        LD      HL,conn_descr
-        LD      A,(HL)
-        CP      0FFh
-        RET	Z                     ;if descriptor is bad
-	CALL	sockets.close
 	RET
 
-fillzero
-	_fillzero cmd_bufer, 100
-	RET
-
+;- init descriptors whe programs start
 init	LD HL,connected
 	LD (HL),0
 	LD HL,termcmd
@@ -213,6 +108,7 @@ init	LD HL,connected
 	LD (HL),#FF
 	RET
 
+;- display status windows ans connection(s) status
 showstatus
 	_printw wnd_status
 ;	_prints msg_status
@@ -233,18 +129,19 @@ sstat_e
 	_closew
 	RET
 
-;/ inctease counter every interrupt
+;- inctease counter every interrupt
 INCCNTR LD	A,(im_cntr)
 	INC	A
 	LD	(im_cntr),A
 	RET
 
+;-get data from datastream
+;OUT: 
+;  A: Status. 0 - ok; >0 - error
+; BC: length of receved data (#FF max at this time) 
 get_data
 ;	LD	A,'$'	;//for debugging
 ;	_printc
-	LD	A,(connected)
-	OR	A
-	RET	Z		;//if not connected
 	LD	A,(data_descr)
 	CP	#FF		;//check descriptor. FF - bad
 	RET	Z
@@ -258,23 +155,23 @@ chd1	recv	data_descr,data_bufer,255
 	_closew
 	CALL	close_data_connection
 	JR	chd4
-chd5	_cur_off
-chd2	LD	A,B	;//----------- get info from bufer ------------
-	OR	A
-	JNZ	chd3
-	LD	A,C
-	OR	A
-	JR	Z,chd4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
-chd3	LD	A,(HL)
-	_printc		;//print char
-	INC	HL
-	DEC	BC
-	JP	chd2
-chd4	_cur_on
 	RET
+;chd5	_cur_off
+;chd2	LD	A,B	;//----------- get info from bufer ------------
+;	OR	A
+;	JNZ	chd3
+;	LD	A,C
+;	OR	A
+;	JR	Z,chd4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
+;chd3	LD	A,(HL)
+;	_printc		;//print char
+;	INC	HL
+;	DEC	BC
+;	JP	chd2
+;chd4	_cur_on
+;	RET
 
-	RET
-
+;- sleep some ticks. used as data request interval
 cangetdata
 	LD	A,(im_cntr)
 	AND	#F0
@@ -286,17 +183,15 @@ cangetdata
 	RET
 
 ;- RECEVE MAIN -----------------------------------------------------------------------------
+;receve main stream and print chars
 get_rcv	;//check receve info from main connection
 ;	LD	A,'$'	;//for debugging
 ;	_printc
-	LD	A,(connected)
-	OR	A
-	RET	Z		;//if not connected
 	LD	A,(conn_descr)
 	CP	#FF		;//check descriptor. FF - bad
 	RET	Z
-rcv1	recv	conn_descr,rcv_bufer,255
-	LD	HL,rcv_bufer
+rcv1	recv	conn_descr,data_bufer,#FF
+	LD	HL,data_bufer
 	OR	A
 	JZ	rcv5
 	_printw wnd_status	;//if error, close connection
@@ -327,8 +222,6 @@ close_connection	;routine for close active connection
 	CALL	sockets.close
 	LD	A,#FF
 	LD	(conn_descr),A
-	XOR	A
-	LD	(connected),A
 	LD	(wait_data),A
 	LD	A,2
 	LD	(last_command),A	;//2 - disconnect(ed)
@@ -378,7 +271,7 @@ parr_ex	POP	HL
 proc_status
 ;	LD	A,'>'		;//debug
 ;	_printc
-	LD	HL,rcv_bufer
+	LD	HL,data_bufer
 pstat_l	LD	A,(HL)
 	OR	A
 	JZ	pstat_k		;//if no data
@@ -402,7 +295,7 @@ pstat_l	LD	A,(HL)
 pstat_e	CALL	strings.ptrtonextline
 	JZ	pstat_l
 pstat_k	XOR	A
-	LD	(rcv_bufer),A
+	LD	(data_bufer),A
 	RET
 
 	include "maindata.asm"
