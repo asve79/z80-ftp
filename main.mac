@@ -71,13 +71,26 @@ oc1	CALL 	sockets.gethostbyname	;//get ip address
 	connect conn_descr,server_addr	;//create connection
 	or 	a
 	jr	nz,get_err
-	_prints msg_openok
 	LD	A,1
 	LD	(last_command),A	;//1 - connect command
-	CALL	showstatus
+	
+	_fillzero data_bufer,#FF
+ioc_1	CALL	get_rcv			;//wait receve responce
+	LD	HL,data_bufer
+	LD	A,(HL)
+	OR	A
+	JR	NZ,ioc_2
+	LD	A,(conn_descr)		;//if connection lost
+	CP	#FF
+	JZ	get_err
+	JR	ioc_1			;//if just no data, wait
+ioc_2	_prints data_bufer-1		;//print responce
+	_prints msg_openok
+	_isstatus220 ioc_3
+ioc_3	CALL	showstatus
+	_cur_on
 	JP	exit
-get_err	_closew
-	_prints msg_openerr
+get_err	_prints msg_openerr
 get_er	LD	A,#FF
 	LD	(conn_descr),A
 	CALL	showstatus
@@ -130,7 +143,7 @@ l4
 l5
 	ENDM
 ;-----------------------------
-;Is connected syayus
+;Is connected status
 ;OUT:
 ;  A - 0 not connected (Z=0), 1 - connected (Z=1)
 	MACRO	_isconnected
@@ -354,6 +367,7 @@ ieun2	_findzero input_bufer
 ;	_watch_registers
 	LDIR				;//insert USER command before username
 ;	_watch_bufer input_bufer,20	;//debug
+	CALL	send_command
 	JP	exit
 ieun_e	
 	ENDM

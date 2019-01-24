@@ -147,6 +147,7 @@ ftp_cmd_id	DB 0
 
 ;buffer for intput. MAX 255 bytes
 input_bufer	DEFS #FF,0
+		DB 13
 data_bufer	DEFS #FF,0
 
 host_addr_len	dw 0

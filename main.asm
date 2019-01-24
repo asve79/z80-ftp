@@ -84,8 +84,8 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ishelpcommand  ekcm_nc		;//'help' command
 	_isaboutcommand ekcm_nc		;//'about' command
 	_isexitcommand	ekcm_nc		;//'about' command
-;	_ifenterusername ekcm_nc	;//if enter username
-;	_ifenterpassword ekcm_nc	;//if enter password
+	_ifenterusername ekcm_nc	;//if enter username
+	_ifenterpassword ekcm_nc	;//if enter password
 ;	_ifenterdir	ekcm_nc		;//if enter dir command
 ;	_ifenterls	ekcm_nc		;//if enter ls commend
 ;	_ifenterquit	ekcm_nc		;//if enter quit command
@@ -206,26 +206,27 @@ get_rcv	;//check receve info from main connection
 rcv1	recv	conn_descr,data_bufer,#FF
 	LD	HL,data_bufer
 	OR	A
-	JZ	rcv5
+	RET	Z
+;	JZ	rcv5
 	_printw wnd_status	;//if error, close connection
 	LD	A,'!'
 	_printc
 	_closew
 	CALL	close_connection
-	JR	rcv4
-rcv5	_cur_off
-rcv2	LD	A,B	;//----------- get info from bufer ------------
-	OR	A
-	JNZ	rcv3
-	LD	A,C
-	OR	A
-	JR	Z,rcv4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
-rcv3	LD	A,(HL)
-	_printc		;//print char
-	INC	HL
-	DEC	BC
-	JP	rcv2	;//-Пока уберем анализ входящих строк-
-rcv4	_cur_on
+;	JR	rcv4
+;rcv5	;_cur_off
+;rcv2	LD	A,B	;//----------- get info from bufer ------------
+	;OR	A
+	;JNZ	rcv3
+	;LD	A,C
+	;OR	A
+	;JR	Z,rcv4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
+;rcv3	LD	A,(HL)
+	;_printc		;//print char
+	;INC	HL
+	;DEC	BC
+	;JP	rcv2	;//-Пока уберем анализ входящих строк-
+;rcv4	;_cur_on
 	RET
 
 close_connection	;routine for close active connection
@@ -310,6 +311,53 @@ pstat_e	CALL	strings.ptrtonextline
 pstat_k	XOR	A
 	LD	(data_bufer),A
 	RET
+
+;Send command to conn_descr
+;IN:
+; input_bufer - command
+;OUT:
+; data_bufer - responce OR conn_descr=#FF if error
+send_command
+        _findzero input_bufer
+	LD      C,A
+	LD      A,13            ;/add 13 code for <CR><LF> EOL command
+	LD      (HL),A
+	INC     HL
+        LD      A,10            ;/add 10 code for <CR><LF> EOL command
+        LD      (HL),A
+        INC     C
+        LD      B,0
+        INC     BC
+        LD      A,(conn_descr)
+        LD      HL,inp_bufer
+        CALL    sockets.send    ;//send buffer content
+        OR      A
+        JZ      sco_ok
+        _printw wnd_status      ;//if error while send data
+        LD      A,'Error'       ;//if error status
+        _printc
+        _closew
+        _cur_on
+	CALL	close_connection
+        JP      sco_nc
+sco_ok	CALL	get_rcv		;//wait receve responce
+	LD	HL,data_bufer
+	LD	A,(HL)
+	OR	A
+	JR	NZ,sco_ok2
+	LD	A,(conn_descr)	;//if connection lost
+	CP	#FF
+	JZ	get_err
+	JR	sco_ok		;//if just no data, wait
+sco_ok2
+	_printw wnd_status      ;//if success status
+	LD      A,'#'
+	_printc
+	_closew
+	_cur_on
+sco_nc	_fillzero input_bufer,255
+        RET
+
 
 	include "maindata.asm"
 	include "z80-sdk/sockets/sockets.a80"
