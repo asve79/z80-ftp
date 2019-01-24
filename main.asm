@@ -48,6 +48,21 @@ mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	CALL	puttotermbufer	;//put char to command bufer and print
 	JP	mloop
 
+puttotermbufer	;put symbol to terminal bufer
+	PUSH 	AF
+	_findzero input_bufer
+puttobufer	;main procedure for put to bufer;TODO make insert mode with shift content
+	POP	AF
+	LD	(HL),A
+	LD	A,(writing_pass)
+	OR	A
+	JR	Z,ptcb2
+	LD	A,'*'		;//if writing password mode, hide symbols
+	JR	ptcb3
+ptcb2	LD	A,(HL)
+ptcb3	_printc		;out character
+	RET
+
 delsymtermmode	;delete symbol in terminal mode
 	_findzero input_bufer	;//get ptr on last symbol+1 in buffer
 	OR	A
@@ -69,21 +84,21 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ishelpcommand  ekcm_nc		;//'help' command
 	_isaboutcommand ekcm_nc		;//'about' command
 	_isexitcommand	ekcm_nc		;//'about' command
-	_ifenterusername ekcm_nc	;//if enter username
-	_ifenterpassword ekcm_nc	;//if enter password
-	_ifenterdir	ekcm_nc		;//if enter dir command
-	_ifenterls	ekcm_nc		;//if enter ls commend
-	_ifenterquit	ekcm_nc		;//if enter quit command
-	_ifenterclose	ekcm_nc		;//if enter close command
-	_ifenterbye	ekcm_nc		;//if enter bye command
+;	_ifenterusername ekcm_nc	;//if enter username
+;	_ifenterpassword ekcm_nc	;//if enter password
+;	_ifenterdir	ekcm_nc		;//if enter dir command
+;	_ifenterls	ekcm_nc		;//if enter ls commend
+;	_ifenterquit	ekcm_nc		;//if enter quit command
+;	_ifenterclose	ekcm_nc		;//if enter close command
+;	_ifenterbye	ekcm_nc		;//if enter bye command
 ;	_ifenterget	ekcm_nc		;//if enter get <file> command
 ;	_ifenterput	ekcm_nc		;//if enter put <file> command
-	_ifenterpwd	ekcm_nc		;//if enter pwd command
-	_ifentercd	ekcm_nc		;//if enter cd <directory> command
+;	_ifenterpwd	ekcm_nc		;//if enter pwd command
+;	_ifentercd	ekcm_nc		;//if enter cd <directory> command
 ;	_isentercat	ekcm_nc		;//if enter cat <file> command
-	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
-	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
-	_isenterrm	ekcm_nc		;//if neter rm <file> command
+;	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
+;	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
+;	_isenterrm	ekcm_nc		;//if neter rm <file> command
 	LD	A,13
 	_printc
 	_prints msg_unknown_cmd
@@ -100,12 +115,9 @@ exit	_cur_off
 	RET
 
 ;- init descriptors whe programs start
-init	LD HL,connected
-	LD (HL),0
-	LD HL,termcmd
-	LD (HL),0
-	LD HL,conn_descr
-	LD (HL),#FF
+init	LD	A,#FF
+	LD	(conn_descr),A
+	LD	(data_descr),A
 	RET
 
 ;- display status windows ans connection(s) status
@@ -146,15 +158,16 @@ get_data
 	CP	#FF		;//check descriptor. FF - bad
 	RET	Z
 chd1	recv	data_descr,data_bufer,255
-	LD	HL,data_bufer
+;	LD	HL,data_bufer
 	OR	A
-	JZ	chd5
+;	JZ	chd5
+	RET	Z
 	_printw wnd_status	;//if error, close connection
 	LD	A,'!'
 	_printc
 	_closew
 	CALL	close_data_connection
-	JR	chd4
+;	JR	chd4
 	RET
 ;chd5	_cur_off
 ;chd2	LD	A,B	;//----------- get info from bufer ------------
@@ -178,8 +191,8 @@ cangetdata
 	RET	Z		;skip N tick's
 	XOR	A
 	LD	(im_cntr),A
-	LD	A,(termcmd)
-	OR	A
+;	LD	A,(termcmd)
+;	OR	A
 	RET
 
 ;- RECEVE MAIN -----------------------------------------------------------------------------

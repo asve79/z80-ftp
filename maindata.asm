@@ -5,7 +5,7 @@ wnd_main
 	DB 00000011B
 	DB 0,0
 	DB 0
-	DB 1,'Ftp client v0.0.7',0
+	DB 1,'Ftp client v0.1.0',0
 
 wnd_cmd
 	DB 0,21
@@ -26,24 +26,18 @@ wnd_status
 	DB 1,'Status',0
 
 msg_keys
-        DB 'Socket server version (ic).',13
+        DB '* Socket server version (ic). *',13,13
         DB 'Press SS+Q for exit.',13
-        DB 'Press SS+W for commands.',13
-	DB 'For help press SS+W + type "help"',13
-	DB '---------------------------------',13,13,0
+	DB '"help" - for command list',13
+	DB '----------------------------',13,13,0
 
 msg_help 
-	DB 13,'Commands:'
+	DB 13,13,'Commands:'
         DB 13,'---------'
-	DB 13,'open hostname port - Open connection to host:port'
-	DB 13,'close - Close current connection'
-	DB 13,'help  - this help message'
-	DB 13,'about - about appication'
-	DB 13,'exit  - quit appication',13
-	DB 13,'Keys'
-	DB 13,'----'
-	DB 13,'RShift+Q - Exit'
-	DB 13,'RShift+W - Enter command'
+	DB 13,'open close ls dir mkdir rmdir cd',13
+	DB 13,'Keys:'
+	DB 13,'-----'
+	DB 13,'RShift+Q - Exit to TR-DOS'
 	DB 13,13,0
 
 msg_about
@@ -66,7 +60,7 @@ msg_openerr 	DB 13,'open connection error',13,0
 msg_openok  	DB 13,'Connected successfuly',13,0
 msg_alredyopen 	DB 13,'Have active connection. Close current first!',13,0
 msg_fdproblem 	DB 13,'Connection descriptor problem',13,0
-msg_connecting 	DB 'Connecting...',0
+msg_connecting 	DB 13,'Connecting...',0
 msg_connectclosed DB 13,'Disconnected',13,0
 msg_dataerr	DB 'Data stream connection error',13,10,0
 msg_loggedin	DB 'User logged in.',0
