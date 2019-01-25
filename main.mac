@@ -376,6 +376,9 @@ ieun2	LD	A,13
 ;	_watch_bufer input_bufer,20	;//debug
 	CALL	send_command
 	_prints data_bufer
+	CALL	proc_status
+	_isstatus331 ieun3
+ieun3	_cur_on
 	JP	exit
 ieun_e	
 	ENDM
@@ -415,6 +418,12 @@ iepw2	_findzero input_bufer
 	LDIR				;//insert PASS command before username
 	LD	A,6
 	LD	(last_command),A
+	_cur_off
+	LD	A,13
+	_printc
+	CALL	send_command
+	_prints data_bufer
+	_cur_on
 	JP	exit
 iepw_e	
 	ENDM
