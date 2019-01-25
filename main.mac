@@ -33,7 +33,7 @@ oc0	LD	A,B		;//check length of hostname. must be > 0
 	JNZ	oc1
 	LD	A,C
 	OR	A
-	JZ	get_err		;//if hostname length is zero
+	JZ	ioc_err		;//if hostname length is zero
 	PUSH	HL
 oc5	LD	A,(HL)		;//find port number or rezo
 	CP	32
@@ -52,25 +52,25 @@ oc9	POP	HL
 	ld 	HL, input_bufer+5
 oc1	CALL 	sockets.gethostbyname	;//get ip address
 	or	a
-	JP	nz,get_err
+	JP	nz,ioc_err
 	LD 	(server_addr),hl;
 	LD	(server_addr+2),bc
 
 	;create socket			;//create socket
 	socket 	AF_INET,SOCK_STREAM,0
 	cp 	#FF
-	jp 	z,get_err
+	jp 	z,ioc_err
 	LD 	(conn_descr),a
 
 	;bind my socket
 	bind conn_descr,my_addr		;//bind to address ????
 	or 	a
-	jp 	nz,get_err
+	jp 	nz,ioc_err
 
         ;connect to host
 	connect conn_descr,server_addr	;//create connection
 	or 	a
-	jr	nz,get_err
+	jr	nz,ioc_err
 	LD	A,1
 	LD	(last_command),A	;//1 - connect command
 	
@@ -82,23 +82,24 @@ ioc_1	CALL	get_rcv			;//wait receve responce
 	JR	NZ,ioc_2
 	LD	A,(conn_descr)		;//if connection lost
 	CP	#FF
-	JZ	get_err
+	JZ	ioc_err
 	JR	ioc_1			;//if just no data, wait
 ioc_2	_prints data_bufer-1		;//print responce
 	_prints msg_openok
+	CALL	proc_status		;GET status code to 'DE'
 	_isstatus220 ioc_3
 ioc_3	CALL	showstatus
 	_cur_on
 	JP	exit
-get_err	_prints msg_openerr
-get_er	LD	A,#FF
+ioc_err	_prints msg_openerr
+ioc_er	LD	A,#FF
 	LD	(conn_descr),A
 	CALL	showstatus
 	JP	exit
 oc3	_prints msg_alredyopen
-	jr	get_er
+	jr	ioc_er
 oc4	_prints	msg_fdproblem
-	jr	get_er
+	jr	ioc_er
 lex	_cur_on
 	ENDM
 	
@@ -164,8 +165,12 @@ l5
 	LD	(last_command),A
 	_prints msg_username
 	JP	exit
-exit220 
+exit220 ;PUSH	HL
+	;_prints ch220no
+	;POP	HL
 	ENDM
+
+;ch220no DB	'200 not found',0
 ;-----------------------------
 ; user logged in. Just message
 	MACRO	_isstatus230 exit
@@ -347,7 +352,9 @@ exit331
 ;	_watch_bufer input_bufer,20	;//debug
 	LD	A,1
 	LD	(user_anonymous),A	;//purpose what non anonymous user
-ieun2	_findzero input_bufer
+ieun2	LD	A,13
+	_printc
+	_findzero input_bufer
 	PUSH	HL
 	POP	DE
 	INC	DE
@@ -368,6 +375,7 @@ ieun2	_findzero input_bufer
 	LDIR				;//insert USER command before username
 ;	_watch_bufer input_bufer,20	;//debug
 	CALL	send_command
+	_prints data_bufer
 	JP	exit
 ieun_e	
 	ENDM

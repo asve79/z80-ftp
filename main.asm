@@ -99,12 +99,12 @@ enterkeytermmode	;enter key pressed in terminal window
 ;	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
 ;	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
 ;	_isenterrm	ekcm_nc		;//if neter rm <file> command
-	LD	A,13
-	_printc
+;	LD	A,13
+;	_printc
 	_prints msg_unknown_cmd
 ekcm_nc	_fillzero input_bufer,#FF
-	LD	A,13
-	_printc
+;	LD	A,13
+;	_printc
 	JP	mloop
 ;---------------------------
 ;- routines -
@@ -282,34 +282,41 @@ parse_rcv_code
 parr_ex	POP	HL
 	RET	
 
+;PARCE RETURN CODE IN data_bufer
+;OUT:
+; DE - code
+;  A - 0 it nothing to rarce
 proc_status
 ;	LD	A,'>'		;//debug
 ;	_printc
 	LD	HL,data_bufer
 pstat_l	LD	A,(HL)
 	OR	A
-	JZ	pstat_k		;//if no data
+;	JZ	pstat_k		;//if no data
+	RET	Z
 ;	_printc			;//debug
 	CALL	parse_rcv_code
-	OR	A
-	JZ	pstat_k		;//if nothing to parce
-	LD	A,E
-	PUSH	DE
-	PUSH	HL
-	_printw wnd_status	;//if error, close connection
-	CALL	wind.A_HEX
-	_closew
-	POP	HL
-	POP	DE
-	_isstatus220 pstat_e	;//service ready for new user (after connect). turn on login mode
-	_isstatus331 pstat_e	;//after USER command. turn on passord mode
-	_isstatus230 pstat_e	;//afrer PASS command. just print "seccion open"
-	_isstatus227 pstat_e	;//after PASV command. open data connection.
-	_isstatus226 pstat_e	;//data chanel is closed. exchange ended
-pstat_e	CALL	strings.ptrtonextline
-	JZ	pstat_l
-pstat_k	XOR	A
-	LD	(data_bufer),A
+;	OR	A
+;	JZ	pstat_k		;//if nothing to parce
+;	RET	Z
+;	LD	A,E
+;	PUSH	DE
+;	PUSH	HL
+;	_printw wnd_status	;//if error, close connection
+;	CALL	wind.A_HEX
+;	_closew
+;	POP	HL
+;	POP	DE
+;	_isstatus220 pstat_e	;//service ready for new user (after connect). turn on login mode
+;	_isstatus331 pstat_e	;//after USER command. turn on passord mode
+;	_isstatus230 pstat_e	;//afrer PASS command. just print "seccion open"
+;	_isstatus227 pstat_e	;//after PASV command. open data connection.
+;	_isstatus226 pstat_e	;//data chanel is closed. exchange ended
+;pstat_e	CALL	strings.ptrtonextline
+;	JZ	pstat_l
+;pstat_k
+;    	XOR	A
+;	LD	(data_bufer),A
 	RET
 
 ;Send command to conn_descr
@@ -329,25 +336,26 @@ send_command
         LD      B,0
         INC     BC
         LD      A,(conn_descr)
-        LD      HL,inp_bufer
+        LD      HL,input_bufer
         CALL    sockets.send    ;//send buffer content
         OR      A
         JZ      sco_ok
-        _printw wnd_status      ;//if error while send data
-        LD      A,'Error'       ;//if error status
+sco_err _printw wnd_status      ;//if error while send data
+        LD      A,'E'		;//if error status
         _printc
         _closew
         _cur_on
 	CALL	close_connection
         JP      sco_nc
-sco_ok	CALL	get_rcv		;//wait receve responce
+sco_ok	_fillzero data_bufer,#FF
+sco_ok1	CALL	get_rcv		;//wait receve responce
 	LD	HL,data_bufer
 	LD	A,(HL)
 	OR	A
-	JR	NZ,sco_ok2
+	JR	NZ,sco_ok2	;//if data is receved
 	LD	A,(conn_descr)	;//if connection lost
 	CP	#FF
-	JZ	get_err
+	JZ	sco_err
 	JR	sco_ok		;//if just no data, wait
 sco_ok2
 	_printw wnd_status      ;//if success status
@@ -356,8 +364,11 @@ sco_ok2
 	_closew
 	_cur_on
 sco_nc	_fillzero input_bufer,255
+;	_prints doned
+;	CALL	spkeyb.CONIN
         RET
 
+;doned	DB	"done. press a key",0
 
 	include "maindata.asm"
 	include "z80-sdk/sockets/sockets.a80"
