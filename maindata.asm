@@ -5,7 +5,7 @@ wnd_main
 	DB 00000011B
 	DB 0,0
 	DB 0
-	DB 1,'Ftp client v0.1.0',0
+	DB 1,'Ftp client v0.1.1',0
 
 wnd_cmd
 	DB 0,21
@@ -66,7 +66,7 @@ msg_dataerr	DB 'Data stream connection error',13,10,0
 msg_loggedin	DB 'User logged in.',0
 msg_closedata	DB 'Data chanel closed.',0
 msg_opendata	DB 'Data chanel opened.',0
-msg_unknown_cmd DB 'Unknown command.',0
+msg_unknown_cmd DB 13,'Unknown command.',13,0
 msg_specifydirectory
 		DB 'Plese specify directory name',0
 msg_specifyfilename

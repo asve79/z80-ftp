@@ -197,122 +197,6 @@ exit230
 	_prints	msg_closedata
 exit226
 	ENDM
-;-----------------------------
-;Entered to passive mode. open data session
-	MACRO	_isstatus227 exit
-	LD	A,D
-	CP	2
-	JNZ	exit227
-	LD	A,E
-	CP	27
-	JNZ	exit227
-	LD	HL,data_bufer
-is227l1 LD	A,(HL)
-	OR	A
-	JZ	exit227
-	CP	13
-	JZ	exit227
-	INC	HL
-	CP	'('
-	JNZ	is227l1
-	PUSH	HL
-	CALL	strings.texttonum_n
-	LD	A,E
-	LD	(passive_addr),A
-	POP	HL
-	CALL	strings.ptrtonextvol
-	PUSH	HL
-	CALL	strings.texttonum_n
-	POP	HL
-	LD	A,E
-	LD	(passive_addr+1),A
-	CALL	strings.ptrtonextvol
-	PUSH	HL
-	CALL	strings.texttonum_n
-	LD	A,E
-	LD	(passive_addr+2),A
-	POP	HL
-	CALL	strings.ptrtonextvol
-	PUSH	HL
-	CALL	strings.texttonum_n
-	LD	A,E
-	LD	(passive_addr+3),A
-	POP	HL
-	CALL	strings.ptrtonextvol
-	PUSH	HL
-	CALL	strings.texttonum_n
-	LD	A,E
-	LD	(passive_port+1),A
-	POP	HL
-	CALL	strings.ptrtonextvol
-	CALL	strings.texttonum_n
-	LD	A,E
-	LD	(passive_port),A
-
-;	_printw wnd_status
-	LD	A,13
-	_printc
-	LD	A,(passive_addr)
-	CALL	wind.A_HEX
-	LD	A,','
-	_printc
-	LD	A,(passive_addr+1)
-	CALL	wind.A_HEX
-	LD	A,','
-	_printc
-	LD	A,(passive_addr+2)
-	CALL	wind.A_HEX
-	LD	A,','
-	_printc
-	LD	A,(passive_addr+3)
-	CALL	wind.A_HEX
-	LD	A,':'
-	_printc
-	LD	HL,(passive_port)
-	CALL	wind.HL_HEX
-
-	;create socket			;//create socket
-	socket 	AF_INET,SOCK_STREAM,0
-	cp 	#FF
-	jp 	z,is227err
-	LD 	(data_descr),a
-
-	LD	a,13	;//debuf
-	_printc
-	LD	a,'*'
-	_printc
-	LD	A,(data_descr)
-	call	wind.A_HEX
-
-	;bind my socket
-	bind 	data_descr,my_addr		;//bind to address ????
-	or 	a
-	jp 	nz,is227err
-
-        ;connect to host
-	connect data_descr,passive_addr	;//create connection
-	or 	a
-	jr	nz,is227err
-;	_closew
-	LD	A,13
-	_printc
-	_prints msg_opendata
-	LD	A,13
-	_printc
-
-	LD	A,(last_command)
-	_isListRequest exit
-;	_isRecvRequest exit
-;	_isSendRequest exit	
-;	_isCatRequest exit	;//chow file content
-	JP	exit
-is227err
-;	_closew
-	LD	a,13
-	_printc
-	_prints msg_dataerr
-exit227
-	ENDM
 ;------------------------------------------------------------
 ;Need password to enter. Set terminal to enter password mode.
 	MACRO	_isstatus331 exit
@@ -417,13 +301,7 @@ iepw2	_findzero input_bufer
 	LD	BC,5
 	LDIR				;//insert PASS command before username
 	LD	A,6
-	LD	(last_command),A
-	_cur_off
-	LD	A,13
-	_printc
-	CALL	send_command
-	_prints data_bufer
-	_cur_on
+	CALL	sendandprint
 	JP	exit
 iepw_e	
 	ENDM
@@ -463,7 +341,7 @@ iecl_e
 	MACRO _ifenterdir exit
 	_cmpstr input_bufer,cmd_dir,3
 	OR	A
-	JNZ	iels_l1
+	JNZ	iels_l0
 	ENDM
 ;---------------------------------
 ;if enter 'ls' command in terminal
@@ -471,12 +349,30 @@ iecl_e
 	_cmpstr input_bufer,cmd_ls,2
 	OR	A
 	JZ	iels_e
+iels_l0	CALL	setpassivemode
+	LD	A,(conn_descr)
+	CP	#FF
+	JZ	iels_e
 iels_l1	LD	DE,input_bufer
 	LD	HL,ftp_cmd_pasv
 	LD	BC,4
 	LDIR
 	LD	A,7			;//code 7 - ls/dir request
-	LD	(last_command),A
+	CALL	sendandprint
+iels_l2 recv	data_descr,data_bufer,#FF
+	OR	A
+	JNZ	iels_l4
+	LD	A,C
+	LD	B,A
+	LD	HL,data_bufer
+iels_l3 LD	A,(HL)			;//print bufer
+	_printc
+	INC	HL
+	DJNZ	iels_l3
+	JR	iels_l2			;//get next block data
+iels_l4 LD	A,#FF
+	LD	(data_descr),A
+
 	JP	exit
 iels_e
 	ENDM
@@ -504,7 +400,7 @@ iecd_l1	LD	DE,input_bufer
 	LD	BC,4
 	LDIR
 	LD	A,11			;//code 11 - cd request
-	LD	(last_command),A
+	CALL	sendandprint
 	JP	exit
 iecd_e
 	ENDM
@@ -520,7 +416,7 @@ iecd_e
 	LD	BC,3
 	LDIR
 	LD	A,10			;//code 10 - pwd request
-	LD	(last_command),A
+	CALL	sendandprint
 	JP	exit
 iepwd_e
 	ENDM
@@ -571,7 +467,7 @@ iemkd1	PUSH	HL
 	LD	BC,6
 	LDIR
 	LD	A,14			;//code 14 - mkdirectory request
-	LD	(last_command),A
+	CALL	sendandprint
 	JP	exit
 iemkd_e
 	ENDM
@@ -606,7 +502,7 @@ iermd1	PUSH	HL
 	LD	BC,6
 	LDIR
 	LD	A,13			;//code 13 - remove directory request
-	LD	(last_command),A
+	CALL	sendandprint
 	JP	exit
 iermd_e
 	ENDM
@@ -641,7 +537,7 @@ ierm1	PUSH	HL
 	LD	BC,6
 	LDIR
 	LD	A,13			;//code 15 - remove filename request
-	LD	(last_command),A
+	CALL	sendandprint
 	JP	exit
 ierm_e
 	ENDM

@@ -79,6 +79,7 @@ delsymtermmode	;delete symbol in terminal mode
 	JP	mloop
 
 enterkeytermmode	;enter key pressed in terminal window
+	_cur_off
 	_isopencommand  ekcm_nc		;//'open'  command
 	_isclosecommand ekcm_nc 	;//'close' command
 	_ishelpcommand  ekcm_nc		;//'help' command
@@ -88,23 +89,24 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterpassword ekcm_nc	;//if enter password
 ;	_ifenterdir	ekcm_nc		;//if enter dir command
 ;	_ifenterls	ekcm_nc		;//if enter ls commend
-;	_ifenterquit	ekcm_nc		;//if enter quit command
-;	_ifenterclose	ekcm_nc		;//if enter close command
-;	_ifenterbye	ekcm_nc		;//if enter bye command
+	_ifenterquit	ekcm_nc		;//if enter quit command
+	_ifenterclose	ekcm_nc		;//if enter close command
+	_ifenterbye	ekcm_nc		;//if enter bye command
 ;	_ifenterget	ekcm_nc		;//if enter get <file> command
 ;	_ifenterput	ekcm_nc		;//if enter put <file> command
-;	_ifenterpwd	ekcm_nc		;//if enter pwd command
-;	_ifentercd	ekcm_nc		;//if enter cd <directory> command
+	_ifenterpwd	ekcm_nc		;//if enter pwd command
+	_ifentercd	ekcm_nc		;//if enter cd <directory> command
 ;	_isentercat	ekcm_nc		;//if enter cat <file> command
-;	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
-;	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
-;	_isenterrm	ekcm_nc		;//if neter rm <file> command
+	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
+	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
+	_isenterrm	ekcm_nc		;//if neter rm <file> command
 ;	LD	A,13
 ;	_printc
 	_prints msg_unknown_cmd
 ekcm_nc	_fillzero input_bufer,#FF
 ;	LD	A,13
 ;	_printc
+	_cur_on
 	JP	mloop
 ;---------------------------
 ;- routines -
@@ -369,6 +371,138 @@ sco_nc	_fillzero input_bufer,255
         RET
 
 ;doned	DB	"done. press a key",0
+
+;Print CRLF, send command and print result
+;IN:
+; A - last command code
+sendandprint
+	LD	(last_command),A
+	_cur_off
+	LD	A,13
+	_printc
+	CALL	send_command
+	_prints	data_bufer
+	_cur_on
+	RET
+
+;Entered to passive mode. open data session
+setpassivemode
+        LD      A,(conn_descr)
+        LD      HL,ftp_cmd_pasv
+	LD	BC,6
+        CALL    sockets.send    ;//send buffer content
+	OR	A
+	JZ	spmo_s1		;/if error
+	CALL	close_connection
+	RET
+spmo_s1	CALL	proc_status
+	LD	A,D
+	CP	2
+	RET	NZ
+	LD	A,E
+	CP	27
+	RET	NZ
+	LD	HL,data_bufer
+spmo_s2 LD	A,(HL)
+	OR	A
+	RET	Z
+	CP	13
+	RET	Z
+	INC	HL
+	CP	'('
+	JNZ	spmo_s2
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_addr),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	POP	HL
+	LD	A,E
+	LD	(passive_addr+1),A
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_addr+2),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_addr+3),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	PUSH	HL
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_port+1),A
+	POP	HL
+	CALL	strings.ptrtonextvol
+	CALL	strings.texttonum_n
+	LD	A,E
+	LD	(passive_port),A
+
+;	_printw wnd_status
+	LD	A,13
+	_printc
+	LD	A,(passive_addr)
+	CALL	wind.A_HEX
+	LD	A,','
+	_printc
+	LD	A,(passive_addr+1)
+	CALL	wind.A_HEX
+	LD	A,','
+	_printc
+	LD	A,(passive_addr+2)
+	CALL	wind.A_HEX
+	LD	A,','
+	_printc
+	LD	A,(passive_addr+3)
+	CALL	wind.A_HEX
+	LD	A,':'
+	_printc
+	LD	HL,(passive_port)
+	CALL	wind.HL_HEX
+
+	;create socket			;//create socket
+	socket 	AF_INET,SOCK_STREAM,0
+	cp 	#FF
+	JZ	spmo_err
+	LD 	(data_descr),a
+
+	LD	a,13	;//debuf
+	_printc
+	LD	a,'*'
+	_printc
+	LD	A,(data_descr)
+	call	wind.A_HEX
+
+	;bind my socket
+	bind 	data_descr,my_addr		;//bind to address ????
+	or 	a
+	JNZ	spmo_err
+
+        ;connect to host
+	connect data_descr,passive_addr	;//create connection
+	or 	a
+	JNZ	spmo_err
+;	_closew
+	LD	A,13
+	_printc
+	_prints msg_opendata
+	LD	A,13
+	_printc
+	RET
+spmo_err
+;	_closew
+	LD	a,13
+	_printc
+	_prints msg_dataerr
+	RET
+
 
 	include "maindata.asm"
 	include "z80-sdk/sockets/sockets.a80"
