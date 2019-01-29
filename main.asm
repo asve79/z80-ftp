@@ -87,8 +87,8 @@ enterkeytermmode	;enter key pressed in terminal window
 	_isexitcommand	ekcm_nc		;//'about' command
 	_ifenterusername ekcm_nc	;//if enter username
 	_ifenterpassword ekcm_nc	;//if enter password
-;	_ifenterdir	ekcm_nc		;//if enter dir command
-;	_ifenterls	ekcm_nc		;//if enter ls commend
+	_ifenterdir	ekcm_nc		;//if enter dir command
+	_ifenterls	ekcm_nc		;//if enter ls commend
 	_ifenterquit	ekcm_nc		;//if enter quit command
 	_ifenterclose	ekcm_nc		;//if enter close command
 	_ifenterbye	ekcm_nc		;//if enter bye command
@@ -206,10 +206,11 @@ get_rcv	;//check receve info from main connection
 	CP	#FF		;//check descriptor. FF - bad
 	RET	Z
 rcv1	recv	conn_descr,data_bufer,#FF
-	LD	HL,data_bufer
+;	LD	HL,data_bufer
 	OR	A
 	RET	Z
 ;	JZ	rcv5
+	_watch_registers
 	_printw wnd_status	;//if error, close connection
 	LD	A,'!'
 	_printc
@@ -350,15 +351,18 @@ sco_err _printw wnd_status      ;//if error while send data
 	CALL	close_connection
         JP      sco_nc
 sco_ok	_fillzero data_bufer,#FF
-sco_ok1	CALL	get_rcv		;//wait receve responce
-	LD	HL,data_bufer
-	LD	A,(HL)
-	OR	A
-	JR	NZ,sco_ok2	;//if data is receved
-	LD	A,(conn_descr)	;//if connection lost
+sco_ok1	CALL	get_rcv		;//receve responce data
+	LD	A,(conn_descr)	
 	CP	#FF
-	JZ	sco_err
-	JR	sco_ok		;//if just no data, wait
+	JZ	sco_err		;//if connection lost
+	LD	A,C
+	OR	A
+	JZ	sco_ok1		;//wait if no data receved
+;	LD	HL,data_bufer
+;	LD	A,(HL)
+;	OR	A
+;	JR	NZ,sco_ok2	;//if data is receved
+;	JR	sco_ok		;//if just no data, wait
 sco_ok2
 	_printw wnd_status      ;//if success status
 	LD      A,'#'
@@ -395,7 +399,14 @@ setpassivemode
 	JZ	spmo_s1		;/if error
 	CALL	close_connection
 	RET
-spmo_s1	CALL	proc_status
+spmo_s1	CALL	get_rcv		;//receve responce data
+	LD	A,(conn_descr)
+	CP	#FF
+	JZ	spmo_err	;//if connection lost
+	LD	A,C
+	OR	A
+	JZ	spmo_s1		;//wait if no data receved
+	CALL	proc_status
 	LD	A,D
 	CP	2
 	RET	NZ
@@ -473,7 +484,7 @@ spmo_s2 LD	A,(HL)
 	JZ	spmo_err
 	LD 	(data_descr),a
 
-	LD	a,13	;//debuf
+	LD	a,13	;//debug
 	_printc
 	LD	a,'*'
 	_printc

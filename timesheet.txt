@@ -12,3 +12,4 @@ Day#8 - Start refactoring logic. ~30m
 Day#9 - Refacotring in progress. ~1h
 Day#10 - Refactoring in progress - 1h 20m
 Day#11 - Refactoring in progress - 1h
+Day#12 - Debuging ls/dir functions - 2h

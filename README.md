@@ -21,6 +21,7 @@ Support commands:
 * mkdir <directory>
 * rmdir <directory>
 * rm <filename>
+* pwd
 
 To do:
 * 'cdup' command
@@ -29,7 +30,6 @@ To do:
 * 'open' command on terminal
 * 'user' command
 * 'cat' command
-* migrate command mode to console.
 
 build:
 ```bash

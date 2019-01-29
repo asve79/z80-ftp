@@ -75,15 +75,17 @@ oc1	CALL 	sockets.gethostbyname	;//get ip address
 	LD	(last_command),A	;//1 - connect command
 	
 	_fillzero data_bufer,#FF
-ioc_1	CALL	get_rcv			;//wait receve responce
-	LD	HL,data_bufer
-	LD	A,(HL)
-	OR	A
-	JR	NZ,ioc_2
+ioc_1	CALL	get_rcv			;//receve responce
 	LD	A,(conn_descr)		;//if connection lost
 	CP	#FF
 	JZ	ioc_err
-	JR	ioc_1			;//if just no data, wait
+	LD	A,C
+	OR	A
+	JZ	ioc_1			;//wait if nothing receve
+	LD	HL,data_bufer
+	LD	A,(HL)			;//if zero in bufer, skip responce
+	OR	A
+	JZ	exit
 ioc_2	_prints data_bufer-1		;//print responce
 	_prints msg_openok
 	CALL	proc_status		;GET status code to 'DE'
@@ -350,16 +352,16 @@ iecl_e
 	OR	A
 	JZ	iels_e
 iels_l0	CALL	setpassivemode
-	LD	A,(conn_descr)
+	LD	A,(data_descr)
 	CP	#FF
-	JZ	iels_e
+	JZ	exit
 iels_l1	LD	DE,input_bufer
-	LD	HL,ftp_cmd_pasv
-	LD	BC,4
+	LD	HL,ftp_cmd_list
+	LD	BC,7
 	LDIR
 	LD	A,7			;//code 7 - ls/dir request
 	CALL	sendandprint
-iels_l2 recv	data_descr,data_bufer,#FF
+iels_l2 recv	data_descr,data_bufer,#00FF
 	OR	A
 	JNZ	iels_l4
 	LD	A,C
