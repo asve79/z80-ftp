@@ -367,12 +367,18 @@ iels_l2 recv	data_descr,data_bufer,#00FF
 	LD	A,C
 	LD	B,A
 	LD	HL,data_bufer
+	_cur_off
 iels_l3 LD	A,(HL)			;//print bufer
 	_printc
 	INC	HL
 	DJNZ	iels_l3
 	JR	iels_l2			;//get next block data
-iels_l4 LD	A,#FF
+iels_l4 _cur_on
+	LD	A,(data_descr)
+	CP	#FF
+	JZ	exit
+	CALL    sockets.close
+	LD	A,#FF
 	LD	(data_descr),A
 
 	JP	exit
@@ -546,31 +552,59 @@ ierm_e
 
 ;---------------------------------
 ;if enter 'cat <filename>' command in terminal
-	MACRO _ifentercat exit
+	MACRO _isentercat exit
 	_cmpstr input_bufer,cmd_cat,3
 	OR	A
 	JZ	iecat_e
 	LD	A,(input_bufer)		
 	OR	A
 	JNZ	iecat1			;if filenename not entered
-	_findzero input_bufer
+	_fillzero input_bufer,#FF
 	_prints msg_specifyfilename
 	JP	exit
-iecat1	PUSH	HL
+iecat1	CALL	setpassivemode
+	LD	A,(data_descr)
+	CP	#FF
+	JZ	exit
+	_findzero input_bufer
+	PUSH	HL
 	POP	DE
-	LD	B,12
-iecat2	INC	DE
-	DJNZ	iecat2
+;	LD	B,12
+;iecat2	INC	DE
+;	DJNZ	iecat2
+	INC	DE			;+1 symbol for shift
 	INC	A
 	LD	B,0
 	LD	C,A			;//move filename to rigth at 10 symbols in bufer for 'pasv 0,recv <filename>'
-	LDDR	
+	LDDR
 	LD	DE,input_bufer
-	LD	HL,ftp_cmd_pasv
+	LD	HL,ftp_cmd_retr
 	LD	BC,5
 	LDIR
 	LD	A,16			;//code 16 - cat request
-	LD	(last_command),A
+	CALL	sendandprint
+iecat_2 recv	data_descr,data_bufer,#00FF
+	OR	A
+	JNZ	iecat_4
+	LD	A,C
+	LD	B,A
+	LD	HL,data_bufer
+	_cur_off
+iecat_3 LD	A,(HL)			;//print bufer
+	_printc
+	INC	HL
+	DJNZ	iecat_3
+	JR	iecat_2			;//get next block data
+iecat_4 LD	A,13
+	_printc
+	_cur_on
+	LD	A,(data_descr)
+	CP	#FF
+	JZ	exit
+	CALL    sockets.close
+	LD	A,#FF
+	LD	(data_descr),A
+
 	JP	exit
 iecat_e
 	ENDM

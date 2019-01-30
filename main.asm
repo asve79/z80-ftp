@@ -96,7 +96,7 @@ enterkeytermmode	;enter key pressed in terminal window
 ;	_ifenterput	ekcm_nc		;//if enter put <file> command
 	_ifenterpwd	ekcm_nc		;//if enter pwd command
 	_ifentercd	ekcm_nc		;//if enter cd <directory> command
-;	_isentercat	ekcm_nc		;//if enter cat <file> command
+	_isentercat	ekcm_nc		;//if enter cat <file> command
 	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
 	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
 	_isenterrm	ekcm_nc		;//if neter rm <file> command
