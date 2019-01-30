@@ -15,7 +15,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * open
 * ls
 * dir
-* cd
+* cd <directory>
 * quit
 * close
 * bye
@@ -23,7 +23,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * rmdir <directory>
 * rm <filename>
 * pwd
-* cat
+* cat <filename>
 * cdup
 
 ## To Do
@@ -33,6 +33,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * Paging when output support
 
 ## Build
+Assemblrer:  https://github.com/z00m128/sjasmplus
 ```bash
 git clone git@github.com:asve79/z80-ftp.git
 
