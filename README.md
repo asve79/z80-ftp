@@ -24,9 +24,9 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * rm <filename>
 * pwd
 * cat
+* cdup
 
 ## To Do
-* 'cdup' command
 * 'get' command
 * 'put' command
 * 'user' command

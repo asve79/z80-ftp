@@ -88,6 +88,7 @@ cmd_dir		DB 'dir',0
 cmd_pwd		DB 'pwd',0
 cmd_bye		DB 'bye',0
 cmd_cd		DB 'cd',0
+cmd_cdup	DB 'cdup',0
 cmd_mkdir	DB 'mkdir',0
 cmd_rmdir	DB 'rmdir',0
 cmd_rm		DB 'rm',0
@@ -99,6 +100,7 @@ ftp_cmd_pass	DB 'PASS ',0
 ftp_cmd_pasv	DB 'PASV',13,10,0
 ftp_cmd_list	DB 'LIST',13,10,0
 ftp_cmd_cwd	DB 'CWD ',13,10,0
+ftp_cmd_cdup	DB 'CDUP',13,10,0
 ftp_cmd_retr	DB 'RETR ',0
 ftp_cmd_mkd	DB 'MKD   ',0
 ftp_cmd_rmd	DB 'RMD   ',0

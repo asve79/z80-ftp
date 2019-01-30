@@ -95,11 +95,12 @@ enterkeytermmode	;enter key pressed in terminal window
 ;	_ifenterget	ekcm_nc		;//if enter get <file> command
 ;	_ifenterput	ekcm_nc		;//if enter put <file> command
 	_ifenterpwd	ekcm_nc		;//if enter pwd command
+	_ifentercdup	ekcm_nc		;//if enter cdup command
 	_ifentercd	ekcm_nc		;//if enter cd <directory> command
-	_isentercat	ekcm_nc		;//if enter cat <file> command
-	_isenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
-	_isentermkdir	ekcm_nc		;//if enter mkdir <directory> command
-	_isenterrm	ekcm_nc		;//if neter rm <file> command
+	_ifentercat	ekcm_nc		;//if enter cat <file> command
+	_ifenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
+	_ifentermkdir	ekcm_nc		;//if enter mkdir <directory> command
+	_ifenterrm	ekcm_nc		;//if neter rm <file> command
 ;	LD	A,13
 ;	_printc
 	_prints msg_unknown_cmd

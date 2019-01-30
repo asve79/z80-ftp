@@ -447,7 +447,7 @@ ilre_e
 
 ;---------------------------------
 ;if enter 'mkdir directory' command in terminal
-	MACRO _isentermkdir exit
+	MACRO _ifentermkdir exit
 	_cmpstr input_bufer,cmd_mkdir,5
 	OR	A
 	JZ	iemkd_e
@@ -482,7 +482,7 @@ iemkd_e
 
 ;---------------------------------
 ;if enter 'rmdir directory' command in terminal
-	MACRO _isenterrmdir exit
+	MACRO _ifenterrmdir exit
 	_cmpstr input_bufer,cmd_rmdir,5
 	OR	A
 	JZ	iermd_e
@@ -517,7 +517,7 @@ iermd_e
 
 ;---------------------------------
 ;if enter 'rm filename' command in terminal
-	MACRO _isenterrm exit
+	MACRO _ifenterrm exit
 	_cmpstr input_bufer,cmd_rm,2
 	OR	A
 	JZ	ierm_e
@@ -552,7 +552,7 @@ ierm_e
 
 ;---------------------------------
 ;if enter 'cat <filename>' command in terminal
-	MACRO _isentercat exit
+	MACRO _ifentercat exit
 	_cmpstr input_bufer,cmd_cat,3
 	OR	A
 	JZ	iecat_e
@@ -607,4 +607,22 @@ iecat_4 LD	A,13
 
 	JP	exit
 iecat_e
+	ENDM
+
+;---------------------------------
+;if enter 'cdup' command in terminal
+	MACRO _ifentercdup exit
+	_cmpstr input_bufer,cmd_cdup,4
+	OR	A
+	JZ	iecdup_e
+	_findzero input_bufer
+;	_watch_bufer input_bufer,20	;//debug
+	LD	DE,input_bufer
+	LD	HL,ftp_cmd_cdup
+	LD	BC,7
+	LDIR
+	LD	A,11			;//code 11 - cd request
+	CALL	sendandprint
+	JP	exit
+iecdup_e
 	ENDM
