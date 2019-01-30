@@ -33,7 +33,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * Paging when output support
 
 ## Build
-Assemblrer:  https://github.com/z00m128/sjasmplus
+Assembler:  https://github.com/z00m128/sjasmplus
 ```bash
 git clone git@github.com:asve79/z80-ftp.git
 
