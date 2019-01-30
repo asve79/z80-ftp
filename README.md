@@ -23,13 +23,14 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * rmdir <directory>
 * rm <filename>
 * pwd
+* cat
 
 ## To Do
 * 'cdup' command
 * 'get' command
 * 'put' command
 * 'user' command
-* 'cat' command
+* Paging when output support
 
 ## Build
 ```bash
