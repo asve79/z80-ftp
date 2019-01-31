@@ -356,6 +356,8 @@ iecl_e
 ;	_watch_bufer data_bufer,20	
 iels_l0	_cur_off
 	CALL	setpassivemode
+;	_watch_bufer input_bufer,20	;//debug
+;	_watch_bufer data_bufer,20	
 	_cur_on
 	LD	A,(data_descr)
 	CP	#FF
@@ -385,7 +387,7 @@ iels_l4 _cur_on
 	CALL    sockets.close
 	LD	A,#FF
 	LD	(data_descr),A
-
+	CALL	recevelast
 	JP	exit
 iels_e
 	ENDM
@@ -611,7 +613,7 @@ iecat_4 LD	A,13
 	CALL    sockets.close
 	LD	A,#FF
 	LD	(data_descr),A
-
+	CALL	recevelast
 	JP	exit
 iecat_e
 	ENDM

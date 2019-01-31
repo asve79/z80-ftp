@@ -171,8 +171,8 @@ close_data_connection		;//entrypoint for close data connection
 	JZ	cc_cl
 	CALL	sockets.close
 	LD	A,#FF
-	LD	(data_descr),A	
-cc_cl	
+	LD	(data_descr),A
+cc_cl
 	RET
 
 ;//parce reveve buffer for commands (per one line)
@@ -241,8 +241,8 @@ send_command
         OR      A
         JZ      sco_ok
 sco_err 
-        _cur_on
 	CALL	close_connection
+        _cur_on
         JP      sco_nc
 sco_ok	_fillzero data_bufer,#FF
 sco_ok1	CALL	get_rcv		;//receve responce data
@@ -270,6 +270,22 @@ sendandprint
 	_cur_on
 	RET
 
+;Check receve bufer for message and print it if needed
+recevelast
+        recv  	conn_descr,data_bufer,#FF
+        OR      A
+        JNZ     close_connection
+	LD	A,C
+	OR	A
+	RET	Z
+	LD	B,A
+	LD	HL,data_bufer
+rel_l1	LD	A,(HL)
+	_printc
+	INC	HL
+	DJNZ	rel_l1
+	JR	recevelast
+
 ;Entered to passive mode. open data session
 setpassivemode
         LD      A,(conn_descr)
@@ -278,8 +294,8 @@ setpassivemode
         CALL    sockets.send    ;//send buffer content
 	OR	A
 	JZ	spmo_s1		;/if error
-	CALL	close_connection
-	RET
+	JP	close_connection
+;	RET
 spmo_s1	CALL	get_rcv		;//receve responce data
 	LD	A,(conn_descr)
 	CP	#FF
