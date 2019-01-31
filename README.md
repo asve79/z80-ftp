@@ -31,6 +31,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * 'put' command
 * 'user' command
 * Paging when output support
+* Exception when code 500 seceved
 
 ## Build
 Assembler:  https://github.com/z00m128/sjasmplus

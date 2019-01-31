@@ -11,24 +11,11 @@ PROG
 	CALL	init
 	_printw wnd_main
 	_prints	msg_keys
-	CALL	showstatus
 	_cur_on
 
-mloop   ;LD	A,(wait_data)	
-	;OR	A
-	;JR	Z,mloop_s	;if we no wait responce to command or receve any data
-	;CALL	cangetdata
-	;JR	NZ,mloop_s
-	;CALL	get_rcv		;get data from main stream
-	;CALL	proc_status	;analyse incoming data from status commands
-	;CALL	get_data	;get data from data stream
-mloop_s	CALL    spkeyb.CONINW	;main loop entry
+mloop   
+	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop		;wait a press key
-	;PUSH 	AF
-	;_iscmdmode		;if comman mode on go to cmdmodeproc
-	;JZ	cmdmodeproc
-	;process terminal mode
-	;POP	AF
 	CP	01Dh
 	JZ	exit		;if SS+Q pressed, exit
 	CP	#08		;left cursor key pressed
@@ -39,8 +26,6 @@ mloop_s	CALL    spkeyb.CONINW	;main loop entry
 	JZ	mloop
 	CP	#18		;down cursor key pressed
 	JZ	mloop
-	;CP	01Ch		;if Ss+W pressed - terminal command
-	;JZ	opencmdmode	
 	CP	#7F		;//delete key pressed
 	JZ	delsymtermmode	
 	CP	13		;//enter key pressed
@@ -103,6 +88,7 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterrm	ekcm_nc		;//if neter rm <file> command
 ;	LD	A,13
 ;	_printc
+	_cur_off
 	_prints msg_unknown_cmd
 ekcm_nc	_fillzero input_bufer,#FF
 ;	LD	A,13
@@ -123,27 +109,6 @@ init	LD	A,#FF
 	LD	(data_descr),A
 	RET
 
-;- display status windows ans connection(s) status
-showstatus
-	_printw wnd_status
-;	_prints msg_status
-	_isconnected
-	JNZ	sstat1
-	LD	A,'*'
-	_printc
-;	_prints msg_connected
-	JR	sstat_e
-sstat1	;_prints msg_disconnected
-	LD	A,'x'
-	_printc
-sstat_e	
-;	LD	A,(inc_addr)	;//for debug
-;	INC	A
-;	LD	(inc_addr),A
-;	CALL	wind.A_HEX
-	_closew
-	RET
-
 ;- inctease counter every interrupt
 INCCNTR LD	A,(im_cntr)
 	INC	A
@@ -161,31 +126,10 @@ get_data
 	CP	#FF		;//check descriptor. FF - bad
 	RET	Z
 chd1	recv	data_descr,data_bufer,255
-;	LD	HL,data_bufer
 	OR	A
-;	JZ	chd5
 	RET	Z
-	_printw wnd_status	;//if error, close connection
-	LD	A,'!'
-	_printc
-	_closew
 	CALL	close_data_connection
-;	JR	chd4
 	RET
-;chd5	_cur_off
-;chd2	LD	A,B	;//----------- get info from bufer ------------
-;	OR	A
-;	JNZ	chd3
-;	LD	A,C
-;	OR	A
-;	JR	Z,chd4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
-;chd3	LD	A,(HL)
-;	_printc		;//print char
-;	INC	HL
-;	DEC	BC
-;	JP	chd2
-;chd4	_cur_on
-;	RET
 
 ;- sleep some ticks. used as data request interval
 cangetdata
@@ -194,8 +138,6 @@ cangetdata
 	RET	Z		;skip N tick's
 	XOR	A
 	LD	(im_cntr),A
-;	LD	A,(termcmd)
-;	OR	A
 	RET
 
 ;- RECEVE MAIN -----------------------------------------------------------------------------
@@ -207,30 +149,9 @@ get_rcv	;//check receve info from main connection
 	CP	#FF		;//check descriptor. FF - bad
 	RET	Z
 rcv1	recv	conn_descr,data_bufer,#FF
-;	LD	HL,data_bufer
 	OR	A
 	RET	Z
-;	JZ	rcv5
-	_watch_registers
-	_printw wnd_status	;//if error, close connection
-	LD	A,'!'
-	_printc
-	_closew
 	CALL	close_connection
-;	JR	rcv4
-;rcv5	;_cur_off
-;rcv2	LD	A,B	;//----------- get info from bufer ------------
-	;OR	A
-	;JNZ	rcv3
-	;LD	A,C
-	;OR	A
-	;JR	Z,rcv4	;//if BC=0 (receve 0 bytes); TODO: check is if 1st 0 bytes, then exit. if it end of block then get new block
-;rcv3	LD	A,(HL)
-	;_printc		;//print char
-	;INC	HL
-	;DEC	BC
-	;JP	rcv2	;//-Пока уберем анализ входящих строк-
-;rcv4	;_cur_on
 	RET
 
 close_connection	;routine for close active connection
@@ -291,36 +212,11 @@ parr_ex	POP	HL
 ; DE - code
 ;  A - 0 it nothing to rarce
 proc_status
-;	LD	A,'>'		;//debug
-;	_printc
 	LD	HL,data_bufer
 pstat_l	LD	A,(HL)
 	OR	A
-;	JZ	pstat_k		;//if no data
 	RET	Z
-;	_printc			;//debug
 	CALL	parse_rcv_code
-;	OR	A
-;	JZ	pstat_k		;//if nothing to parce
-;	RET	Z
-;	LD	A,E
-;	PUSH	DE
-;	PUSH	HL
-;	_printw wnd_status	;//if error, close connection
-;	CALL	wind.A_HEX
-;	_closew
-;	POP	HL
-;	POP	DE
-;	_isstatus220 pstat_e	;//service ready for new user (after connect). turn on login mode
-;	_isstatus331 pstat_e	;//after USER command. turn on passord mode
-;	_isstatus230 pstat_e	;//afrer PASS command. just print "seccion open"
-;	_isstatus227 pstat_e	;//after PASV command. open data connection.
-;	_isstatus226 pstat_e	;//data chanel is closed. exchange ended
-;pstat_e	CALL	strings.ptrtonextline
-;	JZ	pstat_l
-;pstat_k
-;    	XOR	A
-;	LD	(data_bufer),A
 	RET
 
 ;Send command to conn_descr
@@ -344,10 +240,7 @@ send_command
         CALL    sockets.send    ;//send buffer content
         OR      A
         JZ      sco_ok
-sco_err _printw wnd_status      ;//if error while send data
-        LD      A,'E'		;//if error status
-        _printc
-        _closew
+sco_err 
         _cur_on
 	CALL	close_connection
         JP      sco_nc
@@ -359,20 +252,7 @@ sco_ok1	CALL	get_rcv		;//receve responce data
 	LD	A,C
 	OR	A
 	JZ	sco_ok1		;//wait if no data receved
-;	LD	HL,data_bufer
-;	LD	A,(HL)
-;	OR	A
-;	JR	NZ,sco_ok2	;//if data is receved
-;	JR	sco_ok		;//if just no data, wait
-sco_ok2
-	_printw wnd_status      ;//if success status
-	LD      A,'#'
-	_printc
-	_closew
-	_cur_on
 sco_nc	_fillzero input_bufer,255
-;	_prints doned
-;	CALL	spkeyb.CONIN
         RET
 
 ;doned	DB	"done. press a key",0
@@ -485,12 +365,12 @@ spmo_s2 LD	A,(HL)
 	JZ	spmo_err
 	LD 	(data_descr),a
 
-	LD	a,13	;//debug
-	_printc
-	LD	a,'*'
-	_printc
-	LD	A,(data_descr)
-	call	wind.A_HEX
+;	LD	a,13	;//debug
+;	_printc
+;	LD	a,'*'
+;	_printc
+;	LD	A,(data_descr)
+;	call	wind.A_HEX
 
 	;bind my socket
 	bind 	data_descr,my_addr		;//bind to address ????

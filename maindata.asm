@@ -1,29 +1,29 @@
 wnd_main
 	DB 0,0
-	DB 32,22
+	DB 32,24
 	DB 00001111B
 	DB 00000011B
 	DB 0,0
 	DB 0
-	DB 1,'Ftp client v0.1.1',0
+	DB 1,'Ftp client v0.1.4',0
 
-wnd_cmd
-	DB 0,21
-	DB 32,3
-	DB 00110010B
-	DB 00000001B
-	DB 0,0
-	DB 0
-	DB 1,'Command:',0
+;wnd_cmd
+;	DB 0,21
+;	DB 32,3
+;	DB 00110010B
+;	DB 00000001B
+;	DB 0,0
+;	DB 0
+;	DB 1,'Command:',0
 
-wnd_status
-	DB 0,21
-	DB 32,3
-	DB 00001111B
-	DB 00000011B
-	DB 0,0
-	DB 0
-	DB 1,'Status',0
+;wnd_status
+;	DB 0,21
+;	DB 32,3
+;	DB 00001111B
+;	DB 00000011B
+;	DB 0,0
+;	DB 0
+;	DB 1,'Status',0
 
 msg_keys
         DB '* Socket server version (ic). *',13,13
@@ -34,7 +34,7 @@ msg_keys
 msg_help 
 	DB 13,13,'Commands:'
         DB 13,'---------'
-	DB 13,'open close ls dir mkdir rmdir cd',13
+	DB 13,'open close ls dir mkdir rmdir cd cdup cat',13
 	DB 13,'Keys:'
 	DB 13,'-----'
 	DB 13,'RShift+Q - Exit to TR-DOS'
@@ -107,9 +107,9 @@ ftp_cmd_rmd	DB 'RMD   ',0
 ftp_cmd_dele	DB 'DELE ',0
 
 ;local command
-local_cmd_ls	DB '!ls',0
-local_cmd_dir	DB '!dir',0
-local_cmd_cd	DB '!cd',0
+;local_cmd_ls	DB '!ls',0
+;local_cmd_dir	DB '!dir',0
+;local_cmd_cd	DB '!cd',0
 ;----------------------------- VARIABLES ---------------------
 im_cntr		DB 0
 term_buf	DB 0

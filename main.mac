@@ -90,13 +90,13 @@ ioc_2	_prints data_bufer-1		;//print responce
 	_prints msg_openok
 	CALL	proc_status		;GET status code to 'DE'
 	_isstatus220 ioc_3
-ioc_3	CALL	showstatus
+ioc_3	;CALL	showstatus
 	_cur_on
 	JP	exit
 ioc_err	_prints msg_openerr
 ioc_er	LD	A,#FF
 	LD	(conn_descr),A
-	CALL	showstatus
+;	CALL	showstatus
 	JP	exit
 oc3	_prints msg_alredyopen
 	jr	ioc_er
@@ -111,7 +111,7 @@ lex	_cur_on
 	OR	A
 	JZ	cl2
 	CALL	close_connection
-	CALL	showstatus
+;	CALL	showstatus
 	_cur_on
 	JP	exit
 cl2	
@@ -132,7 +132,8 @@ l3
 	OR	A
 	JZ	l4
 	_prints	msg_about
-	_printw wnd_cmd
+	_cur_off
+;	_printw wnd_cmd
 	_cur_on
 	JP	exit
 l4
@@ -351,7 +352,11 @@ iecl_e
 	_cmpstr input_bufer,cmd_ls,2
 	OR	A
 	JZ	iels_e
-iels_l0	CALL	setpassivemode
+;	_watch_bufer input_bufer,20	;//debug
+;	_watch_bufer data_bufer,20	
+iels_l0	_cur_off
+	CALL	setpassivemode
+	_cur_on
 	LD	A,(data_descr)
 	CP	#FF
 	JZ	exit
@@ -562,7 +567,9 @@ ierm_e
 	_fillzero input_bufer,#FF
 	_prints msg_specifyfilename
 	JP	exit
-iecat1	CALL	setpassivemode
+iecat1	_cur_off
+	CALL	setpassivemode
+	_cur_on
 	LD	A,(data_descr)
 	CP	#FF
 	JZ	exit
