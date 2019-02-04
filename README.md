@@ -2,6 +2,10 @@
 
 **Product is under construction!**
 
+Now I decide which platform to choose for working with files. 
+1st: ZX Evolution (TS-Conf)
+2nd: ZX Spectrum Next (Now I don’t know anything about input / output of files in this system)
+
 FTP client for z80 (developing and testing on ts-conf machine emulator)
 
 Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
@@ -31,7 +35,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * 'put' command
 * 'user' command
 * Paging when output support
-* Exception when code 500 seceved
+* Trap exception when code 500 seceved
 
 ## Build
 Assembler:  https://github.com/z00m128/sjasmplus
