@@ -5,7 +5,7 @@ wnd_main
 	DB 00000011B
 	DB 0,0
 	DB 0
-	DB 1,'Ftp client v0.1.4',0
+	DB 1,'Ftp client v0.1.5',0
 
 ;wnd_cmd
 ;	DB 0,21
@@ -37,7 +37,7 @@ msg_help
 	DB 13,'open close ls dir mkdir rmdir cd cdup cat',13
 	DB 13,'Keys:'
 	DB 13,'-----'
-	DB 13,'RShift+Q - Exit to TR-DOS'
+	DB 13,'SS+Q - Exit to TR-DOS'
 	DB 13,13,0
 
 msg_about
