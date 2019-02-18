@@ -3,7 +3,11 @@
 	include "main.mac"
 	include "debug.mac"
 	include "z80-sdk/strings/strings.mac"
-	include "z80-sdk/windows_bmw/wind.mac"
+	IFDEF	WC_PLUGIN
+	 include "z80-sdk/wc_api/wind.mac"
+	ELSE
+	 include "z80-sdk/windows_bmw/wind.mac"
+	ENDIF
 	include "z80-sdk/sockets/sockets.mac"
 
 ;- MAIN PROCEDURE -

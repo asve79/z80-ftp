@@ -16,3 +16,4 @@ Day#12 - Debuging ls/dir functions - 2h
 Day#13 - Implement cat <cfilename> & cdup command - 1h 10m
 Day#14 - Remove status windows, fix cursor printing, clean code, some fixes - 1h
 Day#15 - Start WC integration process - 30m
+Day#16 - Adapting for WC plugin - 30m
