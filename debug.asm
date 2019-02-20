@@ -15,11 +15,11 @@ watch_bufer
 wb1	LD	A,C
 	CP	1
 	JNZ	wb1a
-	CALL	wind.HL_HEX
+	_hl_hex
 	LD	A,' '
 	_printc
 wb1a	LD	A,(HL)
-	CALL	wind.A_HEX
+	_a_hex
 	LD	A,'('
 	_printc
 	LD	A,(HL)
@@ -58,16 +58,16 @@ watch_registers
 	_printw wnd_debug
 	_prints msg_af
 	LD	a,(vol_a)
-	CALL	wind.A_HEX
+	_a_hex
 	_prints msg_bc
 	LD	HL,(vol_bc)
-	CALL	wind.HL_HEX
+	_hl_hex
 	_prints msg_de
 	LD	HL,(vol_de)
-	CALL	wind.HL_HEX
+	_hl_hex
 	_prints msg_hl
 	LD	HL,(vol_hl)
-	CALL	wind.HL_HEX
+	_hl_hex
 wr_e	CALL    spkeyb.CONIN
 	_closew
 	POP	HL

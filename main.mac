@@ -1,12 +1,3 @@
-;--- JZ (JP Z) MACROS ----------------------------------------------------------------------
-	MACRO	JZ addr
-	JP	Z,addr
-	ENDM
-;----JNZ (JP NZ) MACROS---------------------------------------------------------------------
-	MACRO	JNZ addr
-	JP	NZ, addr
-	ENDM
-
 ;----- IS OPEN COMMAND MACROS ----------------
 	MACRO	_isopencommand exit
 	_cmpstr input_bufer, cmd_open, 4

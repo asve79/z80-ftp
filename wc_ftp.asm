@@ -2,6 +2,7 @@
 
         DEFINE  WC_PLUGIN 1
 ;-------
+	include "z80-sdk/common/common.mac"
 WLD     EQU #6006
 ;---------------------------------------
 startCode
@@ -82,8 +83,9 @@ TXT0    DB "FTP CLIENT"
 DAHL    DS 2
 DADE    DS 2
 
-ESTAT   NOP
-        include "main.asm"        
+ESTAT   
+	include "z80-sdk/wc_api/wind.a80"
+        include "main.asm"
 endCode
 ;---------------------------------------
         SAVEBIN "FTP.WMF", startCode, endCode-startCode

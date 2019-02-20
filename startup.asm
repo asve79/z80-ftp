@@ -13,6 +13,7 @@
 ; BFD3-BFFF - Unused
 ; C000-FFFF - Paging area (16Kb)
 
+	include "z80-sdk/common/common.mac"
 	org 	8300h
 
 _start
@@ -79,11 +80,15 @@ SYSERR:
 	DI
 	HALT
 
+	IFDEF	WC_PLUGIN
+	include "z80-sdk/wc_api/wind.a80"
+	ELSE
 	include "z80-sdk/windows_bmw/spkeyb40.a80"
 	include "z80-sdk/windows_bmw/edznak.a80"
         include "z80-sdk/windows_bmw/wind.a80"
-        include "main.asm"
 	include "z80-sdk/windows_bmw/dmm.a80"
+        ENDIF
+        include "main.asm"
 END
 
 	savesna "ftp.sna", _start

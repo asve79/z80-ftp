@@ -1,12 +1,13 @@
 	module main
 
 	include "main.mac"
-	include "debug.mac"
 	include "z80-sdk/strings/strings.mac"
 	IFDEF	WC_PLUGIN
 	 include "z80-sdk/wc_api/wind.mac"
+	 include "z80-sdk/wc_api/keys.mac"
 	ELSE
 	 include "z80-sdk/windows_bmw/wind.mac"
+ 	 include "debug.mac"
 	ENDIF
 	include "z80-sdk/sockets/sockets.mac"
 
@@ -18,8 +19,12 @@ PROG
 	_cur_on
 
 mloop   
+	IFDEF	WC_PLUGIN
+	_getkey
+	ELSE
 	CALL    spkeyb.CONINW	;main loop entry
-	JZ	mloop		;wait a press key
+	ENDIF
+	JRZ	mloop		;wait a press key
 	CP	01Dh
 	JZ	exit		;if SS+Q pressed, exit
 	CP	#08		;left cursor key pressed
@@ -361,23 +366,23 @@ spmo_s2 LD	A,(HL)
 	LD	A,13
 	_printc
 	LD	A,(passive_addr)
-	CALL	wind.A_HEX
+	_a_hex
 	LD	A,','
 	_printc
 	LD	A,(passive_addr+1)
-	CALL	wind.A_HEX
+	_a_hex
 	LD	A,','
 	_printc
 	LD	A,(passive_addr+2)
-	CALL	wind.A_HEX
+	_a_hex
 	LD	A,','
 	_printc
 	LD	A,(passive_addr+3)
-	CALL	wind.A_HEX
+	_a_hex
 	LD	A,':'
 	_printc
 	LD	HL,(passive_port)
-	CALL	wind.HL_HEX
+	_hl_hex
 
 	;create socket			;//create socket
 	socket 	AF_INET,SOCK_STREAM,0
@@ -419,6 +424,8 @@ spmo_err
 	include "maindata.asm"
 	include "z80-sdk/sockets/sockets.a80"
 	include "z80-sdk/strings/strings.a80"
-	include "debug.asm"
+	IFNDEF	WC_PLUGIN
+ 	 include "debug.asm"
+	ENDIF
 
 	endmodule
