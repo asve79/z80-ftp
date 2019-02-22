@@ -2,29 +2,45 @@
 
 	include "main.mac"
 	include "z80-sdk/strings/strings.mac"
-	IFDEF	WC_PLUGIN
-	 include "z80-sdk/wc_api/wind.mac"
-	 include "z80-sdk/wc_api/keys.mac"
-	ELSE
+
+ 	IFDEF	WC_PLUGIN
+	 include "z80-sdk/common/common.mac"
+         include "z80-sdk/wc_api/wind.mac"
+         include "z80-sdk/wc_api/keys.mac"
+        ELSE 
 	 include "z80-sdk/windows_bmw/wind.mac"
  	 include "debug.mac"
 	ENDIF
+
 	include "z80-sdk/sockets/sockets.mac"
 
 ;- MAIN PROCEDURE -
-PROG	
+PROG	DI
 	CALL	init
+	IFDEF	WC_PLUGIN
+	NOP
+	NOP
+	_init_txtmode
 	_printw wnd_main
 	_prints	msg_keys
-	_cur_on
+;	IFDEF	WC_PLUGIN
+;	_waitkeyoff
+;	ENDIF
+;	_cur_on
+	EI
+	_waitkeyoff
+	ENDIF
 
 mloop   
 	IFDEF	WC_PLUGIN
+	;_waitkey
 	_getkey
+	JR	NZ, ml1
+	JR	mloop
 	ELSE
 	CALL    spkeyb.CONINW	;main loop entry
-	ENDIF
 	JRZ	mloop		;wait a press key
+	ENDIF
 	CP	01Dh
 	JZ	exit		;if SS+Q pressed, exit
 	CP	#08		;left cursor key pressed
@@ -39,7 +55,7 @@ mloop
 	JZ	delsymtermmode	
 	CP	13		;//enter key pressed
 	JZ	enterkeytermmode
-	CALL	puttotermbufer	;//put char to command bufer and print
+ml1	CALL	puttotermbufer	;//put char to command bufer and print
 	JP	mloop
 
 puttotermbufer	;put symbol to terminal bufer
@@ -111,6 +127,7 @@ exit	_cur_off
 	CALL	close_connection
 	_closew
 	RET
+	;JP	eof_module
 
 ;- init descriptors whe programs start
 init	LD	A,#FF
@@ -420,12 +437,14 @@ spmo_err
 	_prints msg_dataerr
 	RET
 
-
 	include "maindata.asm"
 	include "z80-sdk/sockets/sockets.a80"
 	include "z80-sdk/strings/strings.a80"
+
 	IFNDEF	WC_PLUGIN
  	 include "debug.asm"
 	ENDIF
+
+eof_module
 
 	endmodule

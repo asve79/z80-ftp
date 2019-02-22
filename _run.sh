@@ -19,6 +19,7 @@ if [ $? -ne 0 ];then
  exit 1
 fi
 for i in ${wc_plugin}; do
+ sudo rm -f /mnt/tmp/WC/${i}
  sudo cp $i /mnt/tmp/WC
 done
 sudo umount /mnt/tmp
