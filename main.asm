@@ -18,29 +18,31 @@
 PROG	DI
 	CALL	init
 	IFDEF	WC_PLUGIN
-	NOP
-	NOP
 	_init_txtmode
+	ENDIF
 	_printw wnd_main
 	_prints	msg_keys
-;	IFDEF	WC_PLUGIN
-;	_waitkeyoff
-;	ENDIF
-;	_cur_on
-	EI
+	IFDEF	WC_PLUGIN
 	_waitkeyoff
 	ENDIF
+	_cur_on
 
 mloop   
 	IFDEF	WC_PLUGIN
+	EI:HALT
 	;_waitkey
+	_is_escape_key
+	JNZ	exit
+	_is_enter_key
+	JNZ	enterkeytermmode
+	_is_backspace_key
+	JNZ	delsymtermmode
 	_getkey
 	JR	NZ, ml1
 	JR	mloop
 	ELSE
 	CALL    spkeyb.CONINW	;main loop entry
 	JRZ	mloop		;wait a press key
-	ENDIF
 	CP	01Dh
 	JZ	exit		;if SS+Q pressed, exit
 	CP	#08		;left cursor key pressed
@@ -55,6 +57,7 @@ mloop
 	JZ	delsymtermmode	
 	CP	13		;//enter key pressed
 	JZ	enterkeytermmode
+	ENDIF
 ml1	CALL	puttotermbufer	;//put char to command bufer and print
 	JP	mloop
 

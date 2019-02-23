@@ -46,8 +46,7 @@ IVTDAT	EQU	0BFH
 	LD	HL,5B00H ;init memory manager
 	LD	BC,2800H
 	CALL	dmm.IDMM
-        include "main.asm"
-	;CALL	main.PROG
+	CALL	main.PROG
 ; After the program quits, it returns here.
 ; Perform a reset into the TR-DOS
 	LD	HL,0
@@ -80,6 +79,7 @@ SYSERR:
 	DI
 	HALT
 
+	include "main.asm"
 	IFNDEF	WC_PLUGIN
 	include "z80-sdk/windows_bmw/spkeyb40.a80"
 	include "z80-sdk/windows_bmw/edznak.a80"

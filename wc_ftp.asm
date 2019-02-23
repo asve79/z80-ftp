@@ -14,7 +14,7 @@ startCode
         DB 2;                       Type
         DB 1; Pages
         DB 0; Page to #8000
-        DB 0,1; CODE
+        DB 0,(endCode - startCode) / 512 + 1
 	DS 2*5
         DS 2*8	;reserved
         DS 32*3
