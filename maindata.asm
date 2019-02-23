@@ -49,7 +49,11 @@ wnd_hdr	DB #0E,' FTP client v0.1.5 (WC plugin build) ',0
 
 msg_keys
         DB '* Socket server version (ic). *',13,13
+        IFDEF	WC_PLUGIN
+        DB 'Press ESC for exit.',13        
+        ELSE
         DB 'Press SS+Q for exit.',13
+        ENDIF
 	DB '"help" - for command list',13
 	DB '----------------------------',13,13,0
 
@@ -59,7 +63,11 @@ msg_help
 	DB 13,'open close ls dir mkdir rmdir cd cdup cat',13
 	DB 13,'Keys:'
 	DB 13,'-----'
+        IFDEF	WC_PLUGIN
+	DB 13,'ESC- Exit to TR-DOS'
+	ELSE	
 	DB 13,'SS+Q - Exit to TR-DOS'
+	ENDIF
 	DB 13,13,0
 
 msg_about
