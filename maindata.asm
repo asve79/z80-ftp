@@ -60,7 +60,11 @@ msg_keys
 msg_help 
 	DB 13,13,'Commands:'
         DB 13,'---------'
-	DB 13,'open close ls dir mkdir rmdir cd cdup cat',13
+	DB 13,'open close ls dir mkdir rmdir cd cdup cat'
+	IFDEF	WC_PLUGIN
+	DB ' get'
+	ENDIF
+	DB 13
 	DB 13,'Keys:'
 	DB 13,'-----'
         IFDEF	WC_PLUGIN
@@ -123,6 +127,7 @@ cmd_mkdir	DB 'mkdir',0
 cmd_rmdir	DB 'rmdir',0
 cmd_rm		DB 'rm',0
 cmd_cat		DM 'cat',0
+cmd_size	DM 'size',0
 
 ;ftp command
 ftp_cmd_user	DB 'USER ',0
@@ -135,6 +140,7 @@ ftp_cmd_retr	DB 'RETR ',0
 ftp_cmd_mkd	DB 'MKD   ',0
 ftp_cmd_rmd	DB 'RMD   ',0
 ftp_cmd_dele	DB 'DELE ',0
+ftp_cmd_size	DB 'SIZE ',0
 
 ;local command
 ;local_cmd_ls	DB '!ls',0
@@ -171,16 +177,13 @@ writing_pass	DB 0 ;0 - show input symbols 1 - hide input symbols (show *)
 ;14 - mkdir request
 ;15 - rm <file> request
 ;16 - cat <file> request
+;17 - get <file> request
+;18 - size <file> request
 
 last_command	DB 0
 
 wait_data	DB 0 ;0 - no waitm 1 - wait
 ftp_cmd_id	DB 0 
-
-;buffer for intput. MAX 255 bytes
-input_bufer	DEFS #FF,0
-		DB 13
-data_bufer	DEFS #FF,0
 
 host_addr_len	dw 0
 host_addr	dw 0
@@ -190,3 +193,14 @@ server_addr	db 93,158,134,3
 server_port	dw 21
 passive_addr	DB 0,0,0,0
 passive_port    DW 0
+
+;buffer for intput. MAX 255 bytes
+		IFDEF	WC_PLUGIN
+filestruct	DB	5,0	;flag(1),length(4),name(1-255),#00
+		ENDIF
+input_bufer	DEFS #FF,0
+		DB 13
+data_bufer	DEFS #FF,0
+		IFDEF	WC_PLUGIN
+		DEFS #FF,0	;512b for block i/o
+		ENDIF

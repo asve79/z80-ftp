@@ -7,6 +7,7 @@
 	 include "z80-sdk/common/common.mac"
          include "z80-sdk/wc_api/wind.mac"
          include "z80-sdk/wc_api/keys.mac"
+         include "z80-sdk/wc_api/fs.mac"
         ELSE 
 	 include "z80-sdk/windows_bmw/wind.mac"
  	 include "debug.mac"
@@ -114,6 +115,7 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterrmdir	ekcm_nc		;//if enter rmdir <directory> command
 	_ifentermkdir	ekcm_nc		;//if enter mkdir <directory> command
 	_ifenterrm	ekcm_nc		;//if neter rm <file> command
+	_ifentersize	ekcm_nc		;//if neter size <file> command
 ;	LD	A,13
 ;	_printc
 	_cur_off
