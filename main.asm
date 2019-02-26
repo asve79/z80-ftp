@@ -460,6 +460,23 @@ spmo_err
  	 include "debug.asm"
 	ENDIF
 
+;Execute SIZE <filename> commend
+getsize	_findzero input_bufer
+	PUSH	HL
+	POP	DE
+	INC	A
+	LD	B,0
+	LD	C,A			;//move filename to rigth at 10 symbols in bufer for 'pasv 0,recv <filename>'
+	LDDR
+	LD	DE,input_bufer
+	LD	HL,ftp_cmd_size
+	LD	BC,5
+	LDIR
+
+	LD	A,18			;//code 18 - size request
+	JP	sendandprint
+
+
 eof_module
 
 	endmodule

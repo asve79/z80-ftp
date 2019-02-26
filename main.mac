@@ -353,25 +353,27 @@ iels_l0	_cur_off
 	LD	A,(data_descr)
 	CP	#FF
 	JZ	exit
-iels_l1	LD	DE,input_bufer
+	LD	DE,input_bufer
 	LD	HL,ftp_cmd_list
 	LD	BC,7
 	LDIR
 	LD	A,7			;//code 7 - ls/dir request
 	CALL	sendandprint
-iels_l2 recv	data_descr,data_bufer,#00FF
+2	recv	data_descr,data_bufer,#00FF
 	OR	A
-	JNZ	iels_l4
+	JNZ	5f
 	LD	A,C
 	LD	B,A
 	LD	HL,data_bufer
 	_cur_off
-iels_l3 LD	A,(HL)			;//print bufer
+3	LD	A,(HL)			;//print bufer
+	CP	10
+	JRZ	4f
 	_printc
-	INC	HL
-	DJNZ	iels_l3
-	JR	iels_l2			;//get next block data
-iels_l4 _cur_on
+4	INC	HL
+	DJNZ	3b
+	JR	2b			;//get next block data
+5	_cur_on
 	LD	A,(data_descr)
 	CP	#FF
 	JZ	exit
@@ -639,26 +641,22 @@ iecat_e
 	_fillzero input_bufer,#FF
 	_prints msg_specifyfilename
 	JP	exit
-1
-	_findzero input_bufer
-	PUSH	HL
-	POP	DE
-	INC	A
-	LD	B,0
-	LD	C,A			;//move filename to rigth at 10 symbols in bufer for 'pasv 0,recv <filename>'
-	LDDR
-	LD	DE,input_bufer
-	LD	HL,ftp_cmd_size
-	LD	BC,5
-	LDIR
+1	CALL	getsize
+	
+;	LD	A,(type_ret_code)
+;	_a_hex
+;	LD	A,(main_ret_code)
+;	_a_hex
 
-	LD	A,18			;//code 18 - size request
-	CALL	sendandprint
-
-	LD	A,(type_ret_code)
-	_a_hex
-	LD	A,(main_ret_code)
-	_a_hex
+;	LD	A,(type_ret_code)
+;	CP	2
+;	JRNZ	4f
+;	LD	A,(main_ret_code)
+;	CP	13
+;	JRNZ	4f
+;	_prints msg_allfine
+;	JP	exit
+;4	_prints msg_someerror
 	JP	exit
 5
 	ENDM	
@@ -676,13 +674,7 @@ iecat_e
 	_fillzero input_bufer,#FF
 	_prints msg_specifyfilename
 	JP	exit
-1	_cur_off
-	CALL	setpassivemode
-	_cur_on
-	LD	A,(data_descr)
-	CP	#FF
-	JZ	exit
-	_findzero input_bufer
+1	_findzero input_bufer
 	PUSH	HL
 	POP	DE
 ;	LD	B,12
@@ -697,10 +689,41 @@ iecat_e
 	LD	HL,ftp_cmd_retr
 	LD	BC,5
 	LDIR
+	_cur_off
+	CALL	getsize
+	_cur_on
+	LD	A,(type_ret_code)
+	CP	2
+	JRNZ	5f
+	LD	A,(main_ret_code)
+	CP	13
+	JRNZ	5f
+
+	LD	HL,data_descr+4	;position to textnumber
+	XOR	A
+	LD	(filestruct+0),A
+	LD	(filestruct+1),A
+	LD	(filestruct+2),A
+	LD	(filestruct+3),A
+6	LD	A,(HL)
+	INC	HL
+	OR	A
+	JR	5f
+	CP	" "
+	JR	7
+	JR	6b
+7
+
 					;Get file size
 					;Create file
 ;	_mkdfile filestruct
 
+	_cur_off
+	CALL	setpassivemode
+	_cur_on
+	LD	A,(data_descr)
+	CP	#FF
+	JZ	exit
 	LD	A,17			;//code 16 - cat request
 	CALL	sendandprint
 2	 recv	data_descr,data_bufer,#01FF
@@ -721,6 +744,8 @@ iecat_e
 	LD	A,#FF
 	LD	(data_descr),A
 	CALL	recevelast
+	JP	exit
+5	_prints	msg_someerror
 	JP	exit
 iecat_e
 	ENDM
