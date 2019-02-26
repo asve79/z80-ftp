@@ -101,12 +101,16 @@ msg_loggedin	DB 'User logged in.',0
 msg_closedata	DB 'Data chanel closed.',0
 msg_opendata	DB 'Data chanel opened.',0
 msg_unknown_cmd DB 13,'Unknown command.',13,0
+msg_someerror	DB 13,'Some error',13,0
 msg_specifydirectory
 		DB 'Plese specify directory name',0
 msg_specifyfilename
 		DB 'Plese specify filename',0
 msg_username	DB 'Username (anonymous): ',0
 msg_password	DB 'Password: ',0
+
+
+msg_allfine	DB 'All Fine. Good.',0
 
 txt_anonymous	DB 'anonymous',0
 txt_zxpass	DB 'zx-spectrum.ftp.client@ae-nest.com',0
@@ -184,6 +188,9 @@ last_command	DB 0
 
 wait_data	DB 0 ;0 - no waitm 1 - wait
 ftp_cmd_id	DB 0 
+
+type_ret_code	DB 0	;type code - 5 -erroes, 2-ok 3-data
+main_ret_code	DB 0	;main result щзукфешщт code - 
 
 host_addr_len	dw 0
 host_addr	dw 0

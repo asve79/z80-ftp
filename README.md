@@ -29,6 +29,7 @@ Client use RS232 (#F8EF+REGS) connection & socket server on host machine.
 * pwd
 * cat <filename>
 * cdup
+* size
 
 ## To Do
 * 'get' command

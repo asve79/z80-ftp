@@ -282,7 +282,15 @@ sco_ok1	CALL	get_rcv		;//receve responce data
 	JZ	sco_err		;//if connection lost
 	LD	A,C
 	OR	A
-	JZ	sco_ok1		;//wait if no data receved
+	JRZ	sco_ok1		;//wait if no data receved
+	CALL	proc_status  	;//check code
+	OR	A
+	JNZ	1f
+	LD	DE,#0000
+1	LD	A,D
+	LD	(type_ret_code),A
+	LD	A,E
+	LD	(main_ret_code),A	
 sco_nc	_fillzero input_bufer,255
         RET
 
@@ -297,6 +305,8 @@ sendandprint
 	LD	A,13
 	_printc
 	CALL	send_command
+;	LD	A,"%"
+	_printc
 	_prints	data_bufer
 	_cur_on
 	RET
