@@ -106,8 +106,10 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterquit	ekcm_nc		;//if enter quit command
 	_ifenterclose	ekcm_nc		;//if enter close command
 	_ifenterbye	ekcm_nc		;//if enter bye command
-;	_ifenterget	ekcm_nc		;//if enter get <file> command
+	IFDEF	WC_PLUGIN
+	_ifenterget	ekcm_nc		;//if enter get <file> command
 ;	_ifenterput	ekcm_nc		;//if enter put <file> command
+	ENDIF
 	_ifenterpwd	ekcm_nc		;//if enter pwd command
 	_ifentercdup	ekcm_nc		;//if enter cdup command
 	_ifentercd	ekcm_nc		;//if enter cd <directory> command
@@ -290,8 +292,16 @@ sco_ok1	CALL	get_rcv		;//receve responce data
 1	LD	A,D
 	LD	(type_ret_code),A
 	LD	A,E
-	LD	(main_ret_code),A	
-sco_nc	_fillzero input_bufer,255
+	LD	(main_ret_code),A
+	IFDEF	WC_PLUGIN
+	LD	A,(type_ret_code)
+	CP	2
+	JRNZ	sco_nc
+	LD	A,(main_ret_code)
+	CP	13
+	CALL	Z,parcesize		;if status code 213 - parce filesize
+	ENDIF
+sco_nc;	_fillzero input_bufer,255
         RET
 
 ;doned	DB	"done. press a key",0
@@ -476,6 +486,93 @@ getsize	_findzero input_bufer
 	LD	A,18			;//code 18 - size request
 	JP	sendandprint
 
+	IFDEF	WC_PLUGIN
+parcesize
+	PUSH	AF
+	PUSH	BC
+	PUSH	DE
+	PUSH	HL
+	LD	HL,data_bufer+4	;position to textnumber	
+	PUSH	HL
+	_hl_hex
+	LD	a,13
+	_printc
+	POP	HL
+	XOR	A
+	LD	(filestruct+1),A
+	LD	(filestruct+2),A
+	LD	(filestruct+3),A
+	LD	(filestruct+4),A
+6	LD	A,(HL)			;Get file size
+	OR	A
+	JRZ	7f
+	CP	13
+	JRZ	7f
+	PUSH	HL
+	SUB	'0'
+
+	PUSH	AF
+;	_a_hex
+;	LD	A," "	
+;	_printc
+
+	LD	A,(filestruct+1)
+	LD	L,A
+	LD	A,(filestruct+2)
+	LD	H,A
+	LD	A,(filestruct+3)
+	LD	E,A
+	LD	A,(filestruct+4)
+	LD	D,A
+	CALL	math.limul10
+
+	POP	AF
+	ADD	A,L
+	LD	L,A
+
+;	PUSH	HL
+;	_hl_hex
+;	LD	A," "
+;	_printc
+;	POP	HL
+
+	LD	A,L
+	LD	(filestruct+1),A
+	LD	A,H
+	LD	(filestruct+2),A
+	LD	A,E
+	LD	(filestruct+3),A
+	LD	A,D
+	LD	(filestruct+4),A
+	PUSH	DE
+	_hl_hex
+	POP	DE
+	PUSH 	DE
+	POP	HL
+	_hl_hex
+	LD	A,13
+	_printc
+
+	POP	HL
+	INC	HL
+	JR	6b
+
+					
+7	PUSH	BC
+	LD	HL,filestruct+1
+	LD	B,4
+8	LD	A,(HL)
+	_a_hex
+	INC	HL
+	DJNZ	8b
+	LD	A,13
+	_printc
+	POP	HL
+	POP	DE
+	POP	BC
+	POP	AF
+	RET
+	ENDIF
 
 eof_module
 

@@ -37,6 +37,7 @@ PLUGIN  PUSH    IX
         include "z80-sdk/wc_api/wind.a80"
         include "z80-sdk/wc_api/keys.a80"
         include "z80-sdk/wc_api/fs.a80"
+        include "z80-sdk/math/math.a80"
 	ENT
 endCode
 ;---------------------------------------

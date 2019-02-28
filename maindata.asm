@@ -104,6 +104,8 @@ msg_unknown_cmd DB 13,'Unknown command.',13,0
 msg_someerror	DB 13,'Some error',13,0
 msg_specifydirectory
 		DB 'Plese specify directory name',0
+msg_createfile_error
+		DB 'Error creating file ',0
 msg_specifyfilename
 		DB 'Plese specify filename',0
 msg_username	DB 'Username (anonymous): ',0
@@ -132,6 +134,9 @@ cmd_rmdir	DB 'rmdir',0
 cmd_rm		DB 'rm',0
 cmd_cat		DM 'cat',0
 cmd_size	DM 'size',0
+		IFDEF WC_PLUGIN
+cmd_get		DM 'get',0
+		ENDIF
 
 ;ftp command
 ftp_cmd_user	DB 'USER ',0
