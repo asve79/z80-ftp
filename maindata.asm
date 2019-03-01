@@ -209,6 +209,7 @@ passive_port    DW 0
 ;buffer for intput. MAX 255 bytes
 		IFDEF	WC_PLUGIN
 filestruct	DB	5,0	;flag(1),length(4),name(1-255),#00
+filename	DS	256,0
 		ENDIF
 input_bufer	DEFS #FF,0
 		DB 13
