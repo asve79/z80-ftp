@@ -660,3 +660,97 @@ iecat_e
 	JP	exit
 5
 	ENDM	
+
+;---------------------------------
+;if enter 'get <filename>' command in terminal
+	MACRO	_ifenterget exit
+	_cmpstr input_bufer,cmd_get,3
+	OR	A
+	JZ	9f
+	LD	HL, input_bufer
+	CALL	skiptospace
+	OR	A
+	JRNZ	1f			;if filenename not entered
+	_fillzero input_bufer,#FF
+	_prints msg_specifyfilename
+	JP	exit
+1	PUSH	HL
+	_fillzero filename,#FF
+	POP	HL
+	INC	HL
+	LD	DE,filename
+	LD	BC,5
+7	LD	A,(HL)
+	OR	A
+	JRZ	8f
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	INC	BC
+	JR	7b
+8	LD	(DE),A
+	;findzero input_bufer
+	PUSH	HL
+	POP	DE
+	INC	DE			;+1 symbol for shift
+	LDDR
+;	LD	DE,input_bufer
+;	LD	HL,ftp_cmd_retr
+;	LD	BC,5
+;	LDIR
+	_cur_off
+	LD	A,13
+	_printc
+	_printc
+	_prints input_bufer
+	LD	A,13
+	_printc
+	_prints filename
+	LD	A,13
+	_printc
+	CALL	getsize
+	_cur_on
+	_mkfile filestruct		;Create file
+	JRZ	6f
+	PUSH	AF
+	_prints msg_createfile_error	;if error
+	POP	AF
+	_a_hex
+	LD	A,13
+	_printc
+	JP	exit
+6	_cur_off
+	CALL	setpassivemode
+	_cur_on
+	LD	A,(data_descr)
+	CP	#FF
+	JP	exit
+	LD	DE,input_bufer
+	LD	HL,ftp_cmd_retr
+	LD	BC,5
+	LDIR	
+	LD	A,17			;//code 16 - cat request
+	CALL	sendandprint
+2	 recv	data_descr,data_bufer,#01FF
+	OR	A
+	JRNZ	4f
+	LD	HL,data_bufer
+	_cur_off			;---------------------------------------
+3	LD	B,1			;//write bufer
+	_saveblock512
+	JR	2b			;//get next block data
+4	LD	A,13
+	_printc
+	_cur_on
+	LD	A,(data_descr)
+	CP	#FF
+	JP	exit
+	CALL    sockets.close
+	LD	A,#FF
+	LD	(data_descr),A
+	CALL	recevelast
+	JP	exit
+5	_prints	msg_someerror
+	JP	exit
+9
+	ENDM
