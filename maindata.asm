@@ -104,8 +104,12 @@ msg_unknown_cmd DB 13,'Unknown command.',13,0
 msg_someerror	DB 13,'Some error',13,0
 msg_specifydirectory
 		DB 'Plese specify directory name',0
+		IFDEF WC_PLUGIN
 msg_createfile_error
 		DB 'Error creating file ',0
+msg_openfile_error
+		DB 'Error opening file ',0
+		ENDIF
 msg_specifyfilename
 		DB 'Plese specify filename',0
 msg_username	DB 'Username (anonymous): ',0
@@ -136,6 +140,7 @@ cmd_cat		DM 'cat',0
 cmd_size	DM 'size',0
 		IFDEF WC_PLUGIN
 cmd_get		DM 'get',0
+cmd_put		DM 'put',0	
 		ENDIF
 
 ;ftp command
@@ -150,6 +155,7 @@ ftp_cmd_mkd	DB 'MKD   ',0
 ftp_cmd_rmd	DB 'RMD   ',0
 ftp_cmd_dele	DB 'DELE ',0
 ftp_cmd_size	DB 'SIZE ',0
+ftp_cmd_stor	DB 'STOR ',0
 
 ;local command
 ;local_cmd_ls	DB '!ls',0
@@ -188,6 +194,7 @@ writing_pass	DB 0 ;0 - show input symbols 1 - hide input symbols (show *)
 ;16 - cat <file> request
 ;17 - get <file> request
 ;18 - size <file> request
+;19 - put <file> request
 
 last_command	DB 0
 

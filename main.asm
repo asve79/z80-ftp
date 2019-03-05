@@ -125,6 +125,8 @@ enterkeytermmode	;enter key pressed in terminal window
 ekcm_nc	_fillzero input_bufer,#FF
 ;	LD	A,13
 ;	_printc
+;	LD	A,">"
+;	_printc
 	_cur_on
 	JP	mloop
 ;---------------------------
@@ -493,11 +495,11 @@ parcesize
 	PUSH	DE
 	PUSH	HL
 	LD	HL,data_bufer+4	;position to textnumber	
-	PUSH	HL
-	_hl_hex
-	LD	a,13
-	_printc
-	POP	HL
+;	PUSH	HL
+;	_hl_hex
+;	LD	a,13
+;	_printc
+;	POP	HL
 	XOR	A
 	LD	(filestruct+1),A
 	LD	(filestruct+2),A
@@ -544,28 +546,29 @@ parcesize
 	LD	(filestruct+3),A
 	LD	A,D
 	LD	(filestruct+4),A
-	PUSH	DE
-	_hl_hex
-	POP	DE
-	PUSH 	DE
-	POP	HL
-	_hl_hex
-	LD	A,13
-	_printc
+;	PUSH	DE
+;	_hl_hex
+;	POP	DE
+;	PUSH 	DE
+;	POP	HL
+;	_hl_hex
+;	LD	A,13
+;	_printc
 
 	POP	HL
 	INC	HL
 	JR	6b
 		
-7	PUSH	BC
-	LD	HL,filestruct+1
-	LD	B,4
-8	LD	A,(HL)
-	_a_hex
-	INC	HL
-	DJNZ	8b
-	LD	A,13
-	_printc
+7
+;	PUSH	BC
+;	LD	HL,filestruct+1
+;	LD	B,4
+;8	LD	A,(HL)
+;	_a_hex
+;	INC	HL
+;	DJNZ	8b
+;	LD	A,13
+;	_printc
 	POP	HL
 	POP	DE
 	POP	BC
