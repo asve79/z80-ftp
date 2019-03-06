@@ -800,7 +800,9 @@ iecat_e
 	_printc
 ;	CALL	getsize
 	_cur_on
-	_fentry filename		;Copen file
+	XOR	A
+	LD	(filename-1),A		;type 0 - file
+	_fentry filename-1		;Copen file
 	JRZ	6f
 	PUSH	AF
 	_prints msg_openfile_error	;if error
@@ -817,22 +819,39 @@ iecat_e
 	LD	(filestruct+3),A
 	LD	A,D
 	LD	(filestruct+4),A
+	_hl_hex			;///////
+
 	_gfile				;activating file
 	_cur_off
 	CALL	setpassivemode
 	_cur_on
 	LD	A,(data_descr)
 	CP	#FF
-	JP	exit
+	JZ	exit
 	LD	DE,input_bufer
 	LD	HL,ftp_cmd_stor
 	LD	BC,5
 	LDIR	
 	LD	A,18			;//code 18 - put request
 	CALL	sendandprint
-2	LD	A,(filestruct+4)
+	
+	LD	B,4		;///////////////
+	LD	HL,filestruct+1
+tl	LD	A,(HL)		
+	_a_hex
+	LD	A,32
+	_printc
+	INC	HL
+	DJNZ	tl
+
+2	LD	A,"C"
+	_printc
+
+	LD	A,(filestruct+4)
 	INC	A
 	JR 	C,4f			;//IF XX of (XXxxxxxx) == #FF then it was last block
+	LD	A,"R"
+	_printc
 	LD	HL,data_bufer
 	LD	B,1
 	_loadblock512
@@ -856,13 +875,17 @@ iecat_e
 	LD	B,A
 	LD	A,(filestruct+1)
 	LD	C,A
-10	LD	HL,data_bufer		;//sent data
+10	LD	A,"*"
+	_printc
+	LD	HL,data_bufer		;//sent data
 	LD	A,data_descr
-	CALL	sockets.sent
+	CALL	sockets.send
 	OR	A
 	JRNZ	4f
 	JR	2b			;//get next block data
-4	LD	A,13
+4	LD	A,'E'
+	_printc
+	LD	A,13
 	_printc
 	_cur_on
 	LD	A,(data_descr)

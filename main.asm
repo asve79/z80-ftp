@@ -22,6 +22,9 @@ PROG	DI
 	_init_txtmode
 	ENDIF
 	_printw wnd_main
+	LD	A,1
+	LD	(IX+12),A
+	LD	(IX+13),A
 	_prints	msg_keys
 	IFDEF	WC_PLUGIN
 	_waitkeyoff
@@ -108,7 +111,7 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterbye	ekcm_nc		;//if enter bye command
 	IFDEF	WC_PLUGIN
 	_ifenterget	ekcm_nc		;//if enter get <file> command
-;	_ifenterput	ekcm_nc		;//if enter put <file> command
+	_ifenterput	ekcm_nc		;//if enter put <file> command
 	ENDIF
 	_ifenterpwd	ekcm_nc		;//if enter pwd command
 	_ifentercdup	ekcm_nc		;//if enter cdup command

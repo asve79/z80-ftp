@@ -30,7 +30,7 @@ startCode
 PLUGIN  PUSH    IX
         CALL    main.PROG
         POP     IX
-        XOR     A
+        LD      A,3             ;перечитать каталог после выхода из плагина
         RET
 ;---------------------------------------
 	include "main.asm"
