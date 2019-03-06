@@ -2,7 +2,11 @@
 
 set -x
 #prog=ftp.sna
+#labels=startup.lab
 prog=
+labels=wc_ftp.lab
+
+unreal="${HOME}/zx-speccy/unreal-ts"
 
 wc_plugin="FTP.WMF"
 
@@ -24,10 +28,28 @@ for i in ${wc_plugin}; do
 done
 sudo umount /mnt/tmp
 
-cd ~/zx-speccy/unreal-ts
+if [ -f  ${unreal}/${labels} ]; then
+ rm -f ${unreal}/${labels}
+fi
+
+if [ -f ${labels} ];then
+ pwd
+ cp ${labels} ${unreal}/
+fi
+
+
+cd ${unreal}
 
 if [ -z ${prog} ];then
- wine "Unreal.exe"
+ if [ -z ${labels} ];then
+  wine "Unreal.exe"
+ else
+  wine "Unreal.exe" "-l${labels}"
+ fi
 else
- wine "Unreal.exe" "$prog"
+ if [ -z ${labels} ];then
+  wine "Unreal.exe" "${prog}"
+ else
+  wine "Unreal.exe" "-l${labels} ${prog}"
+ fi
 fi
