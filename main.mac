@@ -763,7 +763,7 @@ ieg9
 ifenterput
 	_cmpstr input_bufer,cmd_put,3
 	OR	A
-	JZ	9f
+	JZ	ifep9
 	LD	HL, input_bufer
 	CALL	skiptospace
 	OR	A
@@ -791,15 +791,15 @@ ifep1	PUSH	HL
 	INC	DE			;+1 symbol for shift
 	LDDR
 	_cur_off
-	LD	A,13
-	_printc
-	_printc
-	_prints input_bufer
-	LD	A,13
-	_printc
-	_prints filename
-	LD	A,13
-	_printc
+;	LD	A,13
+;	_printc
+;	_printc
+;	_prints input_bufer
+;	LD	A,13
+;	_printc
+;	_prints filename
+;	LD	A,13
+;	_printc
 ;	CALL	getsize
 	_cur_on
 	XOR	A
@@ -841,32 +841,24 @@ ifep6	LD	A,L			;save file length
 	
 ;	LD	B,4		;///////////////
 ;	LD	HL,filestruct+4
-;tl	LD	A,(HL)		
+;tl1	LD	A,(HL)		
 ;	_a_hex
 ;	INC	DEC
-;	DJNZ	tl
+;	DJNZ	tl1
 ;	LD	A,13
 ;	_printc
-	LD	B,4		;///////////////
-	LD	HL,filestruct+4
-tl1	LD	A,(HL)		
-	_a_hex
-	INC	DEC
-	DJNZ	tl1
-	LD	A,13
-	_printc
 
 ifep2	;LD	A,"C"
 	;_printc
 	;-------------------------
-	LD	B,4		;///////////////
-	LD	HL,filestruct+4
-tl	LD	A,(HL)		
-	_a_hex
-	DEC	HL
-	DJNZ	tl
-	LD	A,13
-	_printc
+;	LD	B,4		;///////////////
+;	LD	HL,filestruct+4
+;tl	LD	A,(HL)		
+;	_a_hex
+;	DEC	HL
+;	DJNZ	tl
+;	LD	A,13
+;	_printc
 	;-------------------------;///////////////
 	LD	A,(filestruct+4)
 	CP	#FF
@@ -918,5 +910,5 @@ ifep4	_prints msg_complete
 	JP	exit
 ifep5	_prints	msg_someerror
 	JP	exit
-9
+ifep9
 	ENDM	
