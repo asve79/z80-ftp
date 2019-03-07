@@ -664,17 +664,18 @@ iecat_e
 ;---------------------------------
 ;if enter 'get <filename>' command in terminal
 	MACRO	_ifenterget exit
+ifenterget
 	_cmpstr input_bufer,cmd_get,3
 	OR	A
-	JZ	9f
+	JZ	ieg9
 	LD	HL, input_bufer
 	CALL	skiptospace
 	OR	A
-	JRNZ	1f			;if filenename not entered
+	JRNZ	ieg1			;if filenename not entered
 	_fillzero input_bufer,#FF
 	_prints msg_specifyfilename
 	JP	exit
-1	PUSH	HL
+ieg1	PUSH	HL
 	_fillzero filename,#FF
 	POP	HL
 	INC	HL
@@ -752,24 +753,25 @@ iecat_e
 	JP	exit
 5	_prints	msg_someerror
 	JP	exit
-9
+ieg9
 	ENDM
 
 
 ;---------------------------------
 ;if enter 'put <filename>' command in terminal
 	MACRO	_ifenterput exit
+ifenterput
 	_cmpstr input_bufer,cmd_put,3
 	OR	A
 	JZ	9f
 	LD	HL, input_bufer
 	CALL	skiptospace
 	OR	A
-	JRNZ	1f			;if filenename not entered
+	JRNZ	ifep1			;if filenename not entered
 	_fillzero input_bufer,#FF
 	_prints msg_specifyfilename
 	JP	exit
-1	PUSH	HL
+ifep1	PUSH	HL
 	_fillzero filename,#FF
 	POP	HL
 	INC	HL
@@ -803,7 +805,7 @@ iecat_e
 	XOR	A
 	LD	(filename-1),A		;type 0 - file
 	_fentry filename-1		;Copen file
-	JRZ	6f
+	JRNZ	ifep6
 	PUSH	AF
 	_prints msg_openfile_error	;if error
 	POP	AF
@@ -811,7 +813,7 @@ iecat_e
 	LD	A,13
 	_printc
 	JP	exit
-6	LD	A,L			;save file length
+ifep6	LD	A,L			;save file length
 	LD	(filestruct+1),A
 	LD	A,H
 	LD	(filestruct+2),A
@@ -819,10 +821,12 @@ iecat_e
 	LD	(filestruct+3),A
 	LD	A,D
 	LD	(filestruct+4),A
-	_hl_hex			;///////
+//	_hl_hex			;///////
 
 	_gfile				;activating file
 	_cur_off
+	CALL	setbinarymode
+	JNZ	exit
 	CALL	setpassivemode
 	_cur_on
 	LD	A,(data_descr)
@@ -835,58 +839,74 @@ iecat_e
 	LD	A,18			;//code 18 - put request
 	CALL	sendandprint
 	
+;	LD	B,4		;///////////////
+;	LD	HL,filestruct+4
+;tl	LD	A,(HL)		
+;	_a_hex
+;	INC	DEC
+;	DJNZ	tl
+;	LD	A,13
+;	_printc
 	LD	B,4		;///////////////
-	LD	HL,filestruct+1
+	LD	HL,filestruct+4
+tl1	LD	A,(HL)		
+	_a_hex
+	INC	DEC
+	DJNZ	tl1
+	LD	A,13
+	_printc
+
+ifep2	;LD	A,"C"
+	;_printc
+	;-------------------------
+	LD	B,4		;///////////////
+	LD	HL,filestruct+4
 tl	LD	A,(HL)		
 	_a_hex
-	LD	A,32
-	_printc
-	INC	HL
+	DEC	HL
 	DJNZ	tl
-
-2	LD	A,"C"
+	LD	A,13
 	_printc
-
+	;-------------------------;///////////////
 	LD	A,(filestruct+4)
-	INC	A
-	JR 	C,4f			;//IF XX of (XXxxxxxx) == #FF then it was last block
-	LD	A,"R"
-	_printc
+	CP	#FF
+	JR 	Z,ifep4			;//IF XX of (XXxxxxxx) == #FF then it was last block
+	;LD	A,"R"
+	;_printc
 	LD	HL,data_bufer
 	LD	B,1
 	_loadblock512
 ;	LD	A,(filestruct+1)
 ;	LD	L,A
-	LD	BC,512
+	LD	BC,#200
 	LD	A,(filestruct+2)
 	SUB	2
 	LD	(filestruct+2),A
-	JR 	NC,10f
+	JR 	NC,ifep10
 	LD	A,(filestruct+3)
 	DEC	A
 	LD	(filestruct+3),A
-	JR	NC,10f
+	CP	#FF
+	JR	NZ,ifep10
 	LD	A,(filestruct+4)
 	DEC	A
 	LD	(filestruct+4),A
-	JR	NC,10f
+	CP	#FF
+	JR	NZ,ifep10
 	LD	A,(filestruct+2)
 	ADD	2
 	LD	B,A
 	LD	A,(filestruct+1)
 	LD	C,A
-10	LD	A,"*"
+ifep10	LD	A,"*"
 	_printc
 	LD	HL,data_bufer		;//sent data
-	LD	A,data_descr
+	LD	A,(data_descr)
 	CALL	sockets.send
 	OR	A
-	JRNZ	4f
-	JR	2b			;//get next block data
-4	LD	A,'E'
-	_printc
-	LD	A,13
-	_printc
+	JRNZ	ifep5			;//get next block data
+	JP	ifep2
+ifep4	_prints msg_complete
 	_cur_on
 	LD	A,(data_descr)
 	CP	#FF
@@ -896,7 +916,7 @@ tl	LD	A,(HL)
 	LD	(data_descr),A
 	CALL	recevelast
 	JP	exit
-5	_prints	msg_someerror
+ifep5	_prints	msg_someerror
 	JP	exit
 9
 	ENDM	

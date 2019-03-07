@@ -84,6 +84,7 @@ msg_about
 
 inc_addr 	DB 0
 
+msg_error	DB 'Error',13,0
 msg_status 	DB 31,'Remote: ',13,0
 msg_datastream  DB 'Data stream '
 msg_connected 	DB 'connected',0
@@ -102,6 +103,7 @@ msg_closedata	DB 'Data chanel closed.',0
 msg_opendata	DB 'Data chanel opened.',0
 msg_unknown_cmd DB 13,'Unknown command.',13,0
 msg_someerror	DB 13,'Some error',13,0
+msg_complete	DB 13,'Complete',13,0
 msg_specifydirectory
 		DB 'Plese specify directory name',0
 		IFDEF WC_PLUGIN
@@ -156,6 +158,7 @@ ftp_cmd_rmd	DB 'RMD   ',0
 ftp_cmd_dele	DB 'DELE ',0
 ftp_cmd_size	DB 'SIZE ',0
 ftp_cmd_stor	DB 'STOR ',0
+ftp_cmd_typei	DB 'TYPE I',13,10,0
 
 ;local command
 ;local_cmd_ls	DB '!ls',0

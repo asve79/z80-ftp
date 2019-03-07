@@ -467,13 +467,41 @@ spmo_err
 	_prints msg_dataerr
 	RET
 
-	include "maindata.asm"
-	include "z80-sdk/sockets/sockets.a80"
-	include "z80-sdk/strings/strings.a80"
-
-	IFNDEF	WC_PLUGIN
- 	 include "debug.asm"
-	ENDIF
+;Entered to binary mode
+;o: 
+;A: 0 - ok - 1 err
+setbinarymode
+        LD      A,(conn_descr)
+        LD      HL,ftp_cmd_typei
+	LD	BC,8
+        CALL    sockets.send    ;//send buffer content
+	OR	A
+	JRNZ	sbmo_err		;/if error
+sbmo_s1	CALL	get_rcv		;//receve responce data
+	LD	A,(conn_descr)
+	CP	#FF
+	JZ	sbmo_err	;//if connection lost
+	LD	A,C
+	OR	A
+	JZ	sbmo_s1		;//wait if no data receved
+	CALL	proc_status
+	LD	A,D
+	CP	2
+	JRNZ	sbmo_err
+	LD	A,E
+	CP	00
+	JRNZ	sbmo_err
+	LD	HL,data_bufer
+	XOR	A
+	OR	A
+	RET
+sbmo_err
+	LD	a,13
+	_printc
+	_prints msg_error
+	LD	A,1
+	OR	A
+	RET
 
 ;Execute SIZE <filename> commend
 getsize	;_findzero input_bufer
@@ -591,6 +619,15 @@ skiptospace
 	RET	Z
 	INC	HL
 	JR 	skiptospace
+
+	include "maindata.asm"
+	include "z80-sdk/sockets/sockets.a80"
+	include "z80-sdk/strings/strings.a80"
+
+	IFNDEF	WC_PLUGIN
+ 	 include "debug.asm"
+	ENDIF
+
 
 eof_module
 
