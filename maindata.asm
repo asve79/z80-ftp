@@ -117,11 +117,15 @@ msg_specifyfilename
 msg_username	DB 'Username (anonymous): ',0
 msg_password	DB 'Password: ',0
 
-
 msg_allfine	DB 'All Fine. Good.',0
 
 txt_anonymous	DB 'anonymous',0
 txt_zxpass	DB 'zx-spectrum.ftp.client@ae-nest.com',0
+
+		IFDEF WC_PLUGIN
+txt_dir		DB '<dir>',0
+txt_file	DB 'file ',0
+		ENDIF
 
 cmd_open  	DB 'open',0
 cmd_close 	DB 'close',0
@@ -141,8 +145,10 @@ cmd_rm		DB 'rm',0
 cmd_cat		DM 'cat',0
 cmd_size	DM 'size',0
 		IFDEF WC_PLUGIN
-cmd_get		DM 'get',0
-cmd_put		DM 'put',0	
+cmd_get		DB 'get',0
+cmd_put		DB 'put',0
+cmd_lrm		DB 'lrm',0
+cmd_lls		DB 'lls',0
 		ENDIF
 
 ;ftp command

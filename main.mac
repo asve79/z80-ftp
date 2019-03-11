@@ -911,4 +911,119 @@ ifep4	_prints msg_complete
 ifep5	_prints	msg_someerror
 	JP	exit
 ifep9
+	ENDM
+
+;---------------------------------
+;if enter '!ls' command in terminal
+;list local fs
+	MACRO _ifenterlls exit
+	_cmpstr input_bufer,cmd_lls,3
+	OR	A
+	JZ	1f
+	_printcrlf
+	LD	A,1
+	EXA
+	_adir
+islls1	LD	A,#1C
+	EXA
+	LD	DE,data_bufer
+	_findNext
+	JZ	exit		;if end of dir
+	LD	A,(data_bufer+2)	;- size
+	LD	L,A			;
+	LD	A,(data_bufer+3)	;
+	LD	H,A			;
+	_hl_hex				;
+	LD	A,(data_bufer+0)	;
+	LD	L,A			;
+	LD	A,(data_bufer+1)	;
+	LD	H,A			;
+	_hl_hex				;
+	LD	A,' '			
+	_printc				
+;	LD	A,(data_bufer+4)	;- date
+;	LD	L,A			;
+;	LD	A,(data_bufer+5)	;
+;	LD	H,A			;
+;	XOR	A
+	
+	LD	A,(data_bufer+5)	;YEAR
+	RR	A
+	LD	L,A
+	LD	H,0
+	LD	BC,1980
+	ADD	HL,BC
+	_hl_hex
+	LD	A,'-'
+	_printc
+
+	LD	A,(data_bufer+4)	;MONTH
+	SRL	A
+	SRL	A
+	SRL	A
+	SRL	A
+	SRL	A
+	LD	B,A
+	LD	A,(data_bufer+5)	
+	AND	1
+	JRZ	islls4
+	LD	A,B
+	OR	#10
+	LD	B,A
+islls4	LD	A,B
+	_a_hex
+	LD	A,'-'
+	_printc
+	LD	A,(data_bufer+4)	;DAY
+	AND	#1F
+	_a_hex
+
+	LD	A,' '			
+	_printc				
+;	LD	A,(data_bufer+6)	;- time
+;	LD	L,A			;
+;	LD	A,(data_bufer+7)	;
+;	LD	H,A			;
+;	_hl_hex				;
+	LD	A,(data_bufer+7)	;HH
+	SRL	A
+	SRL	A
+	SRL	A
+	_a_hex
+	LD	A,':'
+	_printc
+	LD	A,(data_bufer+7)	;MM
+	SRL	A
+	SRL	A
+	SRL	A
+	SRL	A
+	SRL	A
+	LD	B,A
+	LD	A,(data_bufer+8)
+	SLL	
+	SLL
+	SLL
+	OR	B
+	_a_hex
+	LD	A,':'
+	_printc
+	LD	A,(data_bufer+8)
+	AND	#1F
+	SRL	A
+	_a_hex
+	LD	A,' '			;
+	_printc				
+	LD	A,(data_bufer+8)	;- type
+	CP	#10
+	JRNZ	islls2
+	LD	A,'D'
+	JR	islls3
+islls2	LD	A,'F'
+islls3	_printc
+	LD	A,' '			
+	_printc	
+	_prints data_bufer+9		;filename
+	_printcrlf
+	JP	islls1
+1
 	ENDM	
