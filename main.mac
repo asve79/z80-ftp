@@ -928,7 +928,7 @@ islls1	LD	A,#1C
 	EXA
 	LD	DE,data_bufer
 	_findNext
-	JZ	exit		;if end of dir
+	JZ	isllse		;if end of dir
 	LD	A,(data_bufer+2)	;- size
 	LD	L,A			;
 	LD	A,(data_bufer+3)	;
@@ -1000,9 +1000,9 @@ islls4	LD	A,B
 	SRL	A
 	LD	B,A
 	LD	A,(data_bufer+8)
-	SLL	
-	SLL
-	SLL
+	SLL	A
+	SLL	A
+	SLL	A
 	OR	B
 	_a_hex
 	LD	A,':'
@@ -1025,5 +1025,65 @@ islls3	_printc
 	_prints data_bufer+9		;filename
 	_printcrlf
 	JP	islls1
+islisse XOR	A
+	LD	(main_ret_code),A
+	ADD	A,2			;200 code - or
+	LD	(type_ret_code),A	
+
 1
+	ENDM	
+
+
+;---------------------------------
+;if enter 'lrm <filename>' command in terminal
+;remove file
+	MACRO	_ifenterlrm exit
+ifenterlrm
+	_cmpstr input_bufer,cmd_lrm,3
+	OR	A
+	JZ	iflrm9
+	_printcrlf
+	LD	HL, input_bufer
+	CALL	skiptospace
+	OR	A
+	JRNZ	iflrm1			;if filenename not entered
+	_fillzero input_bufer,#FF
+	_prints msg_specifyfilename
+	XOR	A
+	LD	(main_ret_code),A
+	ADD	A,5
+	LD	(type_ret_code),A	
+	JP	exit
+iflrm1	PUSH	HL
+	_fillzero filename,#FF
+	POP	HL
+	INC	HL
+	LD	DE,filename
+7	LD	A,(HL)
+	OR	A
+	JRZ	8f
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	JR	7b
+8	LD	(DE),A
+	LD	A,#00	;#00- file 10 - directory
+	LD	(filename-1),A
+	LD	HL,filename-1
+	_DelFl
+	JRNZ	iflrm_ok
+	_prints	msg_err_rmfile
+	XOR	A
+	LD	(main_ret_code),A
+	ADD	A,5
+	LD	(type_ret_code),A	
+	JP	exit
+iflrm_ok
+	_prints	msg_complete
+	XOR	A
+	LD	(main_ret_code),A
+	ADD	A,2
+	LD	(type_ret_code),A	
+	JP	exit
+iflrm9:
 	ENDM	

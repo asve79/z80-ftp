@@ -123,8 +123,7 @@ txt_anonymous	DB 'anonymous',0
 txt_zxpass	DB 'zx-spectrum.ftp.client@ae-nest.com',0
 
 		IFDEF WC_PLUGIN
-txt_dir		DB '<dir>',0
-txt_file	DB 'file ',0
+msg_err_rmfile	DB 13,'Error remove file',13,0
 		ENDIF
 
 cmd_open  	DB 'open',0

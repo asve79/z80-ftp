@@ -113,6 +113,7 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterget	ekcm_nc		;//if enter get <file> command
 	_ifenterput	ekcm_nc		;//if enter put <file> command
 	_ifenterlls	ekcm_nc		;//if enter lls command
+	_ifenterlrm	ekcm_nc		;//if enter lrm <file> command
 	ENDIF
 	_ifenterpwd	ekcm_nc		;//if enter pwd command
 	_ifentercdup	ekcm_nc		;//if enter cdup command
