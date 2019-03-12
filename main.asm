@@ -8,6 +8,7 @@
          include "z80-sdk/wc_api/wind.mac"
          include "z80-sdk/wc_api/keys.mac"
          include "z80-sdk/wc_api/fs.mac"
+         include "z80-sdk/wc_api/mem.mac"
         ELSE 
 	 include "z80-sdk/windows_bmw/wind.mac"
  	 include "debug.mac"
@@ -35,7 +36,30 @@ mloop
 	IFDEF	WC_PLUGIN
 	EI:HALT
 	;_waitkey
-	_is_escape_key
+	LD	A,(script_pos+1)	;Проверить включен ли режим считывания скрипта
+	CP	#FF
+	JRZ	mloop1			; FFFF - признак что читаем с клавиатуры
+	LD	A,(script_pos)
+	CP	#FF
+	JRZ	mloop1
+
+	LD	BC,script_pos		;позиционирование на символ
+	LD	HL,#C000
+	ADD	HL,BC
+	INC	BC
+	LD	(script_pos),BC
+	LD	A,(HL)			; Читаем символ из скрипта
+	OR	A
+	JRNZ	ml3
+	LD	HL,#FFFF
+	LD	(script_pos),HL
+	JP	mloop
+ml3	CP	13			; Если ENTER
+	JZ	enterkeytermmode
+	CP	10			; Если LF. Ну считаем что типа ENTER
+	JZ	enterkeytermmode
+	JP	ml1
+mloop1	_is_escape_key
 	JNZ	exit
 	_is_enter_key
 	JNZ	enterkeytermmode
@@ -110,6 +134,7 @@ enterkeytermmode	;enter key pressed in terminal window
 	_ifenterclose	ekcm_nc		;//if enter close command
 	_ifenterbye	ekcm_nc		;//if enter bye command
 	IFDEF	WC_PLUGIN
+	_ifrunscript	ekcm_nc		;//if enrer $<script>
 	_ifenterget	ekcm_nc		;//if enter get <file> command
 	_ifenterput	ekcm_nc		;//if enter put <file> command
 	_ifenterlls	ekcm_nc		;//if enter lls command
@@ -147,6 +172,10 @@ exit	_cur_off
 init	LD	A,#FF
 	LD	(conn_descr),A
 	LD	(data_descr),A
+	IFDEF	WC_PLUGIN
+	LD	(script_pos),A		;script - #FFFF означает что скрипт не выполняется
+	LD	(script_pos+1),A
+	ENDIF
 	RET
 
 ;- inctease counter every interrupt

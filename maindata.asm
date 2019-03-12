@@ -62,13 +62,13 @@ msg_help
         DB 13,'---------'
 	DB 13,'open close ls dir mkdir rmdir cd cdup cat'
 	IFDEF	WC_PLUGIN
-	DB ' get'
+	DB ' get put lls lrm'
 	ENDIF
 	DB 13
 	DB 13,'Keys:'
 	DB 13,'-----'
         IFDEF	WC_PLUGIN
-	DB 13,'ESC- Exit to TR-DOS'
+	DB 13,'ESC - Exit to TR-DOS'
 	ELSE	
 	DB 13,'SS+Q - Exit to TR-DOS'
 	ENDIF
@@ -104,6 +104,7 @@ msg_opendata	DB 'Data chanel opened.',0
 msg_unknown_cmd DB 13,'Unknown command.',13,0
 msg_someerror	DB 13,'Some error',13,0
 msg_complete	DB 13,'Complete',13,0
+msg_warnonly16k DB 13,'WARINIG: Load only first 16k',13,0
 msg_specifydirectory
 		DB 'Plese specify directory name',0
 		IFDEF WC_PLUGIN
@@ -170,6 +171,9 @@ ftp_cmd_typei	DB 'TYPE I',13,10,0
 ;local_cmd_dir	DB '!dir',0
 ;local_cmd_cd	DB '!cd',0
 ;----------------------------- VARIABLES ---------------------
+		IFDEF WC_PLUGIN
+script_pos	DW 0
+		ENDIF
 im_cntr		DB 0
 term_buf	DB 0
 conn_descr	DB 0 ;Connection descriptor

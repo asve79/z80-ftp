@@ -1025,7 +1025,7 @@ islls3	_printc
 	_prints data_bufer+9		;filename
 	_printcrlf
 	JP	islls1
-islisse XOR	A
+isllse	XOR	A
 	LD	(main_ret_code),A
 	ADD	A,2			;200 code - or
 	LD	(type_ret_code),A	
@@ -1086,4 +1086,68 @@ iflrm_ok
 	LD	(type_ret_code),A	
 	JP	exit
 iflrm9:
-	ENDM	
+	ENDM
+
+;run script
+;i: $<script_name>
+	MACRO _ifrunscript exit
+ifrunscript
+	LD	A,(input_bufer)
+	CP	'$'
+	JZ	irsc1
+	_printcrlf
+	LD	A,(input_bufer+1)
+	OR	A
+	JNZ	irsc1
+	_prints msg_specifyfilename
+	XOR	A
+	LD	(main_ret_code),A
+	ADD	A,5
+	LD	(type_ret_code),A	
+	JP	exit
+irsc1	_fillzero input_bufer,#FF
+	LD	HL,input_bufer+1
+	LD	DE,filename
+7	LD	A,(HL)
+	OR	A
+	JRZ	8f
+	LD	(DE),A
+	INC	HL
+	INC	DE
+	JR	7b
+8	LD	(DE),A
+	LD	(filename-1),A
+	_fentry filename-1		;Copen file
+	JRNZ	ifrsc2			;if open ok
+	PUSH	AF
+	_prints msg_openfile_error	;if error
+	POP	AF
+	_a_hex
+	_printcrlf
+	JP	exit
+ifrsc2	LD	A,H			;//calculate filelength in block
+	SRL	A
+	INC	A
+	LD	B,A
+	PUSH 	BC
+	CP	33
+	JR	C,ifrsc3
+	_prints msg_warnonly16k
+	POP	BC
+ifrsc3	PUSH 	BC
+	_setpage_c0 1
+	LD	HL,#C000
+	PUSH	HL
+	LD	DE,#C001
+	LD	BC,16384-1
+	LD	(HL),0
+	LDIR			;//fill serment by zero
+	_gfile
+	POP	HL
+	POP	BC
+	_loadblock512
+	LD	HL,0
+	LD	(script_pos),HL	;reset script position and run
+	JP	exit
+irsc1e
+	ENDM
