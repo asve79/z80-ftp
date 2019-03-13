@@ -1085,7 +1085,7 @@ iflrm_ok
 	ADD	A,2
 	LD	(type_ret_code),A	
 	JP	exit
-iflrm9:
+iflrm9
 	ENDM
 
 ;run script
@@ -1094,7 +1094,7 @@ iflrm9:
 ifrunscript
 	LD	A,(input_bufer)
 	CP	'$'
-	JZ	irsc1
+	JNZ	irsc1e
 	_printcrlf
 	LD	A,(input_bufer+1)
 	OR	A
@@ -1105,7 +1105,7 @@ ifrunscript
 	ADD	A,5
 	LD	(type_ret_code),A	
 	JP	exit
-irsc1	_fillzero input_bufer,#FF
+irsc1	_fillzero filename,#FF
 	LD	HL,input_bufer+1
 	LD	DE,filename
 7	LD	A,(HL)
@@ -1129,12 +1129,13 @@ ifrsc2	LD	A,H			;//calculate filelength in block
 	SRL	A
 	INC	A
 	LD	B,A
-	PUSH 	BC
 	CP	33
 	JR	C,ifrsc3
+	PUSH 	BC
 	_prints msg_warnonly16k
 	POP	BC
-ifrsc3	PUSH 	BC
+ifrsc3	
+	PUSH 	BC
 	_setpage_c0 1
 	LD	HL,#C000
 	PUSH	HL

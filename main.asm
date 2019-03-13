@@ -18,6 +18,10 @@
 
 ;- MAIN PROCEDURE -
 PROG	DI
+	IFDEF	WC_PLUGIN	
+	PUSH	AF		;Сохранить статус выхова плагина. Если 00-то вызов по расширению
+	PUSH	BC
+	ENDIF
 	CALL	init
 	IFDEF	WC_PLUGIN
 	_init_txtmode
@@ -31,6 +35,23 @@ PROG	DI
 	_waitkeyoff
 	ENDIF
 	_cur_on
+	IFDEF	WC_PLUGIN
+	POP	BC
+	POP	AF		;восстановить статуст выхова плагина. Если 00-то вызов по расширению
+	OR	A
+	JRNZ	mloop
+	LD	A,'$'			;write command '$<filename>'
+	LD	(input_bufer),A
+	LD	HL,input_bufer+1
+pm1	LD	A,(BC)
+	LD	(HL),A
+	INC	BC
+	INC	HL
+	OR	A
+	JRNZ	pm1
+	_prints input_bufer		;print command
+	JP	enterkeytermmode	;execute command
+	ENDIF
 
 mloop   
 	IFDEF	WC_PLUGIN
@@ -42,8 +63,8 @@ mloop
 	LD	A,(script_pos)
 	CP	#FF
 	JRZ	mloop1
-
-	LD	BC,script_pos		;позиционирование на символ
+	_setpage_c0 1
+	LD	BC,(script_pos)		;позиционирование на символ
 	LD	HL,#C000
 	ADD	HL,BC
 	INC	BC
